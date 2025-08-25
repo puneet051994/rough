@@ -1,3 +1,14 @@
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
+import org.apache.kafka.common.TopicPartition;
+import org.springframework.kafka.listener.ConsumerAwareRebalanceListener;
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.support.TopicPartitionOffset;
+
+import java.time.Duration;
+import java.util.*;
+
 private ConcurrentMessageListenerContainer<String, Object> getConcurrentMessageListenerContainer(
         ConsumerTopic consumerTopic,
         ConcurrentKafkaListenerContainerFactory<String, Object> factory,
@@ -9,105 +20,65 @@ private ConcurrentMessageListenerContainer<String, Object> getConcurrentMessageL
 
     if (consumerTopic.getPartition() != null) {
         // --- Case: Partition is provided ---
-        if (offset != null) {
-            // Start from specific offset
-            TopicPartitionOffset topicPartitionOffset = new TopicPartitionOffset(
-                    consumerTopic.getName(),
-                    consumerTopic.getPartition(),
-                    offset
-            );
-            mlc = factory.createContainer(topicPartitionOffset);
+        TopicPartitionOffset topicPartitionOffset = new TopicPartitionOffset(
+                consumerTopic.getName(),
+                consumerTopic.getPartition()
+        );
+        mlc = factory.createContainer(topicPartitionOffset);
 
-        } else {
-            // Default (latest/earliest depending on auto.offset.reset)
-            TopicPartitionOffset topicPartitionOffset = new TopicPartitionOffset(
-                    consumerTopic.getName(),
-                    consumerTopic.getPartition()
-            );
-            mlc = factory.createContainer(topicPartitionOffset);
-
-            // --- Handle timestamp seeking ---
-            if (timestamp != null) {
-                mlc.getContainerProperties().setConsumerRebalanceListener(
-                        new ConsumerRebalanceListener() {
-                            @Override
-                            public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-                                partitions.forEach(tp -> {
-                                    if (tp.partition() == consumerTopic.getPartition()) {
-                                        mlc.getContainerProperties()
-                                                .getKafkaConsumer()
-                                                .offsetsForTimes(
-                                                        Map.of(tp, timestamp)
-                                                )
-                                                .forEach((assignedTp, offsetAndTs) -> {
-                                                    if (offsetAndTs != null) {
-                                                        mlc.getContainerProperties()
-                                                                .getKafkaConsumer()
-                                                                .seek(assignedTp, offsetAndTs.offset());
-                                                    }
-                                                });
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-                                // no-op
+        // Apply seeking if offset/timestamp provided
+        mlc.getContainerProperties().setConsumerRebalanceListener(new ConsumerAwareRebalanceListener() {
+            @Override
+            public void onPartitionsAssigned(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
+                partitions.forEach(tp -> {
+                    if (tp.partition() == consumerTopic.getPartition()) {
+                        if (offset != null) {
+                            // Seek to given offset
+                            consumer.seek(tp, offset);
+                        } else if (timestamp != null) {
+                            // Seek to offset resolved by timestamp
+                            Map<TopicPartition, Long> tsMap = Map.of(tp, timestamp);
+                            Map<TopicPartition, OffsetAndTimestamp> result = consumer.offsetsForTimes(tsMap);
+                            OffsetAndTimestamp ot = result.get(tp);
+                            if (ot != null) {
+                                consumer.seek(tp, ot.offset());
                             }
                         }
-                );
+                    }
+                });
             }
-        }
+        });
+
     } else {
-        // --- Case: No partition (multiple topics or whole topic) ---
+        // --- Case: No partition (whole topic or multiple topics) ---
         mlc = factory.createContainer(consumerTopic.getName().split(","));
 
-        if (offset != null) {
-            // Seek to offset for each partition after assignment
-            mlc.getContainerProperties().setConsumerRebalanceListener(
-                    new ConsumerRebalanceListener() {
-                        @Override
-                        public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-                            partitions.forEach(tp ->
-                                    mlc.getContainerProperties().getKafkaConsumer().seek(tp, offset)
-                            );
-                        }
+        mlc.getContainerProperties().setConsumerRebalanceListener(new ConsumerAwareRebalanceListener() {
+            @Override
+            public void onPartitionsAssigned(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
+                if (offset != null) {
+                    // Seek all partitions to given offset
+                    partitions.forEach(tp -> consumer.seek(tp, offset));
+                } else if (timestamp != null) {
+                    // Seek all partitions to offsets resolved by timestamp
+                    Map<TopicPartition, Long> tsMap = new HashMap<>();
+                    partitions.forEach(tp -> tsMap.put(tp, timestamp));
 
-                        @Override
-                        public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-                            // no-op
+                    Map<TopicPartition, OffsetAndTimestamp> result = consumer.offsetsForTimes(tsMap);
+                    result.forEach((tp, ot) -> {
+                        if (ot != null) {
+                            consumer.seek(tp, ot.offset());
                         }
-                    }
-            );
-        } else if (timestamp != null) {
-            // Seek to timestamp for each partition after assignment
-            mlc.getContainerProperties().setConsumerRebalanceListener(
-                    new ConsumerRebalanceListener() {
-                        @Override
-                        public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-                            Map<TopicPartition, Long> timestampsToSearch = new HashMap<>();
-                            partitions.forEach(tp -> timestampsToSearch.put(tp, timestamp));
-
-                            Map<TopicPartition, OffsetAndTimestamp> offsets =
-                                    mlc.getContainerProperties().getKafkaConsumer().offsetsForTimes(timestampsToSearch);
-
-                            offsets.forEach((tp, ot) -> {
-                                if (ot != null) {
-                                    mlc.getContainerProperties().getKafkaConsumer().seek(tp, ot.offset());
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-                            // no-op
-                        }
-                    }
-            );
-        }
+                    });
+                }
+            }
+        });
     }
 
+    // Common container settings
     mlc.getContainerProperties().setGroupId(groupId);
     mlc.setBeanName(groupId);
+    mlc.getContainerProperties().setConsumerStartTimeout(Duration.ofSeconds(30));
+
     return mlc;
 }
