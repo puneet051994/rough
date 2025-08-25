@@ -1,0 +1,78 @@
+private ConcurrentMessageListenerContainer<String, Object> getConcurrentMessageListenerContainer(
+        ConsumerTopic consumerTopic,
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory,
+        String groupId) {
+
+    ConcurrentMessageListenerContainer<String, Object> mlc = null;
+    Long offset = consumerTopic.getOffset();
+    Long timestamp = consumerTopic.getTimestamp();
+
+    if (consumerTopic.getPartition() != null) {
+        // Create container for specific partition
+        TopicPartitionOffset topicPartitionOffset;
+
+        if (offset != null) {
+            // Start from specific offset
+            topicPartitionOffset = new TopicPartitionOffset(
+                    consumerTopic.getName(),
+                    consumerTopic.getPartition(),
+                    offset
+            );
+            mlc = factory.createContainer(topicPartitionOffset);
+        } else {
+            // Just create container, we will seek by timestamp later if needed
+            topicPartitionOffset = new TopicPartitionOffset(
+                    consumerTopic.getName(),
+                    consumerTopic.getPartition()
+            );
+            mlc = factory.createContainer(topicPartitionOffset);
+
+            if (timestamp != null) {
+                mlc.getContainerProperties().setConsumerRebalanceListener(
+                        new ConsumerSeekAware.ConsumerSeekCallback() {
+                            @Override
+                            public void onPartitionsAssigned(Map<TopicPartition, Long> assignments,
+                                                             ConsumerSeekAware.ConsumerSeekCallback callback) {
+                                callback.seekToTimestamp(
+                                        consumerTopic.getName(),
+                                        consumerTopic.getPartition(),
+                                        timestamp
+                                );
+                            }
+                        }
+                );
+            }
+        }
+    } else {
+        // Multiple topics handling
+        String[] topics = consumerTopic.getName().split(",");
+
+        if (offset != null) {
+            List<TopicPartitionOffset> topicPartitionOffsets = new ArrayList<>();
+            for (String topic : topics) {
+                topicPartitionOffsets.add(new TopicPartitionOffset(topic.trim(), 0, offset));
+            }
+            mlc = factory.createContainer(topicPartitionOffsets.toArray(new TopicPartitionOffset[0]));
+        } else {
+            mlc = factory.createContainer(topics);
+
+            if (timestamp != null) {
+                mlc.getContainerProperties().setConsumerRebalanceListener(
+                        new ConsumerSeekAware.ConsumerSeekCallback() {
+                            @Override
+                            public void onPartitionsAssigned(Map<TopicPartition, Long> assignments,
+                                                             ConsumerSeekAware.ConsumerSeekCallback callback) {
+                                assignments.keySet().forEach(tp ->
+                                        callback.seekToTimestamp(tp.topic(), tp.partition(), timestamp));
+                            }
+                        }
+                );
+            }
+        }
+    }
+
+    mlc.getContainerProperties().setGroupId(groupId);
+    mlc.setBeanName(groupId);
+    containers.add(mlc);
+    return mlc;
+}
