@@ -1,1 +1,42 @@
-A org.springframework.kafka.listener.GenericMessageListener implementation must be provided
+container.getContainerProperties().setConsumerRebalanceListener(new ConsumerAwareRebalanceListener() {
+
+    @Override
+    public void onPartitionsAssigned(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
+        String containerKey = key;
+
+        // Initialize if absent
+        assignedPartitionsMap.putIfAbsent(containerKey, new HashSet<>());
+
+        assignedPartitionsMap.get(containerKey).clear();
+        assignedPartitionsMap.get(containerKey).addAll(partitions);
+
+        consumerMap.put(containerKey, consumer);
+
+        log.info("Partitions assigned for {}: {}", containerKey, partitions);
+
+        // Call the existing/default rebalance listener if it exists
+        ConsumerRebalanceListener originalListener = container.getContainerProperties().getConsumerRebalanceListener();
+        if (originalListener != null && originalListener != this) {
+            originalListener.onPartitionsAssigned(partitions);
+        }
+    }
+
+    @Override
+    public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+        String containerKey = key;
+
+        if (assignedPartitionsMap.containsKey(containerKey)) {
+            assignedPartitionsMap.get(containerKey).removeAll(partitions);
+        }
+
+        consumerMap.remove(containerKey);
+
+        log.info("Partitions revoked for {}: {}", containerKey, partitions);
+
+        // Call the existing/default rebalance listener if it exists
+        ConsumerRebalanceListener originalListener = container.getContainerProperties().getConsumerRebalanceListener();
+        if (originalListener != null && originalListener != this) {
+            originalListener.onPartitionsRevoked(partitions);
+        }
+    }
+});
