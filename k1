@@ -1,11 +1,8 @@
-package com.rbs.cdna.utility.kafka.klistener.config;
-
 import com.rbs.cdna.utility.kafka.klistener.model.Topics;
 import com.rbs.cdna.utility.kafka.klistener.model.consumer.ConsumerTopic;
 import com.rbs.cdna.utility.kafka.klistener.model.consumer.factory.KafkaConsumerFactoryProperties;
 import com.rbs.cdna.utility.kafka.klistener.utils.ConsumerUtils;
 import com.rbs.cdna.utility.kafka.klistener.utils.KafkaConfigUtils;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -20,131 +17,171 @@ import org.springframework.kafka.listener.ConsumerAwareRebalanceListener;
 import org.springframework.kafka.support.TopicPartitionOffset;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
+/**
+* The type Kafka consumer bean config.
+*/
 @Slf4j
 @Component
 public class KafkaConsumerBeanConfig {
 
+    /**
+     * The Kafka configuration.
+     */
     @Autowired
-    private KafkaConfiguration kafkaConfiguration;
+    KafkaConfiguration kafkaConfiguration;
 
+    /**
+     * The Consumer utils.
+     */
     @Autowired
-    private ConsumerUtils consumerUtils;
+    ConsumerUtils consumerUtils;
 
     @Value("${kafka.config.max.journeys:5}")
     private int noOfJourneys;
 
     // Store containers by key
-    private final Map<String, ConcurrentMessageListenerContainer<String, Object>> containerMap = new HashMap<>();
+    private final Map<String, ConcurrentMessageListenerContainer<String, Object>> containerMap = new ConcurrentHashMap<>();
 
     // Store assigned partitions per container
-    private final Map<String, Set<TopicPartition>> assignedPartitionsMap = new HashMap<>();
+    private final Map<String, Set<TopicPartition>> assignedPartitionsMap = new ConcurrentHashMap<>();
 
+    // Map to hold the consumer instance for each container
+    private final Map<String, Consumer<?, ?>> consumerMap = new ConcurrentHashMap<>();
+
+    /**
+     * Message listener container map map.
+     *
+     * @return the map
+     */
     @Bean("messageListenerContainerMap")
     public Map<String, ConcurrentMessageListenerContainer<String, Object>> messageListenerContainerMap() {
-        if (null != kafkaConfiguration) {
-            Map<String, Topics> kafkaTopics = kafkaConfiguration.getJourneys();
-            if (MapUtils.isNotEmpty(kafkaTopics)) {
-                prepareConsumers(kafkaTopics);
-            }
-        }
-        return containerMap;
+
+       Map<String, ConcurrentMessageListenerContainer<String, Object>> messageListenerContainerMap = new HashMap<>();
+       if (null != kafkaConfiguration) {
+          Map<String, Topics> kafkaTopics = kafkaConfiguration.getJourneys();
+          if (MapUtils.isNotEmpty(kafkaTopics)) {
+             prepareConsumers(messageListenerContainerMap, kafkaTopics);
+          }
+       }
+       return messageListenerContainerMap;
     }
 
-    private void prepareConsumers(Map<String, Topics> kafkaTopics) {
-        if (kafkaTopics.size() <= noOfJourneys) {
-            kafkaTopics.forEach((journey, topics) -> {
-                if (null != topics.getSubscribe()) {
-                    String key = KafkaConfigUtils.getKey(journey, topics.getSubscribe().getName());
-                    ConcurrentMessageListenerContainer<String, Object> container = createConsumerContainerPerTopic(journey, topics.getSubscribe());
-                    containerMap.put(key, container);
-                    assignedPartitionsMap.put(key, new HashSet<>());
+    private void prepareConsumers(Map<String, ConcurrentMessageListenerContainer<String, Object>> messageListenerContainerMap, Map<String, Topics> kafkaTopics) {
+       if (kafkaTopics.size() <= noOfJourneys) {
+          kafkaTopics.forEach((journey, topics) -> {
+             if (null != topics.getSubscribe()) {
+                String key = KafkaConfigUtils.getKey(journey, topics.getSubscribe().getName());
+                ConcurrentMessageListenerContainer<String, Object> container = createConsumerContainerPerTopic(journey, topics.getSubscribe());
+                containerMap.put(key, container);
+                assignedPartitionsMap.put(key, new HashSet<>());
+                container.getContainerProperties().setConsumerRebalanceListener(new ConsumerAwareRebalanceListener() {
+                   @Override
+                   public void onPartitionsAssigned(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
+                      assignedPartitionsMap.get(key).clear();
+                      assignedPartitionsMap.get(key).addAll(partitions);
 
-                    container.getContainerProperties().setConsumerRebalanceListener(new ConsumerAwareRebalanceListener() {
-                        @Override
-                        public void onPartitionsAssigned(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
-                            assignedPartitionsMap.get(key).clear();
-                            assignedPartitionsMap.get(key).addAll(partitions);
-                            log.info("Partitions assigned for {}: {}", key, partitions);
-                        }
+                      consumerMap.put(key, consumer);
+                      log.info("Partitions assigned for {}: {}", key, partitions);
+                   }
 
-                        @Override
-                        public void onPartitionsRevoked(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
-                            assignedPartitionsMap.get(key).removeAll(partitions);
-                            log.info("Partitions revoked for {}: {}", key, partitions);
-                        }
-                    });
-
-                    container.start();
-                }
-            });
-        } else {
-            log.error("Configured journeys exceed the allowed limit of {}", noOfJourneys);
-        }
+                   @Override
+                   public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+                      assignedPartitionsMap.get(key).removeAll(partitions);
+                      consumerMap.remove(key);
+                      log.info("Partitions revoked for {}: {}", key, partitions);
+                   }
+                });
+             }
+          });
+       } else {
+          log.error("##################################################################################################################");
+          log.error("No listeners has been created. Number of 'kafka.config.journeys' configured must not be greater than {}.", noOfJourneys);
+          log.error("##################################################################################################################");
+       }
     }
 
-    private ConcurrentMessageListenerContainer<String, Object> createConsumerContainerPerTopic(String journey, ConsumerTopic consumerTopic) {
-        ConcurrentKafkaListenerContainerFactory<String, Object> factory = kafkaListenerContainerFactory(consumerTopic, journey);
-        String groupId = factory.getContainerProperties().getGroupId();
-        return getConcurrentMessageListenerContainer(consumerTopic, factory, groupId);
+    private ConcurrentMessageListenerContainer createConsumerContainerPerTopic(String journey, ConsumerTopic consumerTopic) {
+       ConcurrentMessageListenerContainer<String, Object> mlc = null;
+       if (null != consumerTopic) {
+          String containerCreationStatus = null;
+          try {
+             log.info("####################################### Preparing message listener container for=[journey={}, topic={}] #######################################", journey, consumerTopic.getName());
+             mlc = createMessageListenerContainer(consumerTopic, journey);
+             containerCreationStatus = "PREPARED";
+          } catch (Exception e) {
+             containerCreationStatus = "PREPARATION_FAILED";
+             log.error("Error occurred while creating the ConcurrentMessageListenerContainer for the journey={}, topic={}", journey, consumerTopic.getName(), e);
+          } finally {
+             log.info("ConcurrentMessageListenerContainer creation status={} for the journey={}, topic={}", containerCreationStatus, journey, consumerTopic.getName());
+             log.info("#############################################################################################################################################");
+          }
+       }
+       return mlc;
+    }
+
+    private ConcurrentMessageListenerContainer<String, Object> createMessageListenerContainer(ConsumerTopic consumerTopic, String journey) {
+
+       ConcurrentKafkaListenerContainerFactory<String, Object> factory = kafkaListenerContainerFactory(consumerTopic, journey);
+       String groupId = factory.getContainerProperties().getGroupId();
+       ConcurrentMessageListenerContainer<String, Object> container = getConcurrentMessageListenerContainer(consumerTopic, factory, groupId);
+       return container;
     }
 
     private ConcurrentMessageListenerContainer<String, Object> getConcurrentMessageListenerContainer(ConsumerTopic consumerTopic, ConcurrentKafkaListenerContainerFactory<String, Object> factory, String groupId) {
-        ConcurrentMessageListenerContainer<String, Object> container;
-        if (null != consumerTopic.getPartition()) {
-            TopicPartitionOffset tpo = new TopicPartitionOffset(consumerTopic.getName(), consumerTopic.getPartition());
-            container = factory.createContainer(tpo);
-        } else {
-            container = factory.createContainer(consumerTopic.getName().split(","));
-        }
-        container.getContainerProperties().setGroupId(groupId);
-        container.setBeanName(groupId);
-        return container;
+       ConcurrentMessageListenerContainer<String, Object> mlc = null;
+       if (null != consumerTopic.getPartition()) {
+          TopicPartitionOffset topicPartitionOffset = new TopicPartitionOffset(consumerTopic.getName(), consumerTopic.getPartition());
+          mlc = factory.createContainer(topicPartitionOffset);
+       } else {
+          mlc = factory.createContainer(consumerTopic.getName().split(","));
+       }
+       mlc.getContainerProperties().setGroupId(groupId);
+       mlc.setBeanName(groupId);
+       return mlc;
     }
 
     private ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(ConsumerTopic consumerTopic, String journey) {
-        String listenerDetails = consumerUtils.getPropertyPath(journey, consumerTopic.getName(), "listener");
-        ConsumerFactory<String, Object> consumerFactoryObject = consumerUtils.consumerFactory(consumerTopic, journey, kafkaConfiguration);
-        KafkaConsumerFactoryProperties properties = consumerTopic.getProperties() != null ? consumerTopic.getProperties().getConsumerFactoryProperties() : null;
-        return consumerUtils.getKafkaListener(listenerDetails, consumerFactoryObject, properties);
+
+       String listenerDetails = consumerUtils.getPropertyPath(journey, consumerTopic.getName(), "listener");
+       ConsumerFactory<String, Object> consumerFactoryObject = consumerUtils.consumerFactory(consumerTopic, journey, kafkaConfiguration);
+       KafkaConsumerFactoryProperties kafkaConsumerFactoryProperties = null != consumerTopic.getProperties() ? consumerTopic.getProperties().getConsumerFactoryProperties() : null;
+       ConcurrentKafkaListenerContainerFactory<String, Object> factory = consumerUtils.getKafkaListener(listenerDetails, consumerFactoryObject, kafkaConsumerFactoryProperties);
+       return factory;
     }
 
     // Public API to seek to a given offset if partition assigned
     public boolean seek(String journey, String topic, int partition, long offset) {
-        String key = KafkaConfigUtils.getKey(journey, topic);
-        ConcurrentMessageListenerContainer<String, Object> container = containerMap.get(key);
+       String key = KafkaConfigUtils.getKey(journey, topic);
+       Consumer<?, ?> consumer = consumerMap.get(key);
+       Set<TopicPartition> assigned = assignedPartitionsMap.get(key);
+       TopicPartition tp = new TopicPartition(topic, partition);
 
-        if (container == null) {
-            log.error("Container not found for key={}", key);
-            return false;
-        }
+       if (consumer == null) {
+          log.error("Consumer not available for key={}", key);
+          return false;
+       }
 
-        Set<TopicPartition> assigned = assignedPartitionsMap.get(key);
-        TopicPartition tp = new TopicPartition(topic, partition);
+       if (!assigned.contains(tp)) {
+          log.error("Partition {} not assigned to container {}", tp, key);
+          return false;
+       }
 
-        if (!assigned.contains(tp)) {
-            log.error("Partition {} not assigned to container {}", tp, key);
-            return false;
-        }
+       try {
+          consumer.pause(Set.of(tp));
+          log.info("Paused partition {} for seeking", tp);
 
-        container.getContainerProperties().getConsumerTaskExecutor().execute(() -> {
-            container.getAssignedPartitions().forEach(topicPartition -> {
-                if (topicPartition.equals(tp)) {
-                    try {
-                        log.info("Seeking to offset={} on topic={} partition={}", offset, topic, partition);
-                        container.getContainerProperties().getKafkaConsumer().seek(tp, offset);
-                    } catch (Exception e) {
-                        log.error("Error during seek operation", e);
-                    }
-                }
-            });
-        });
+          consumer.seek(tp, offset);
+          log.info("Sought partition {} to offset {} for key {}", tp, offset, key);
 
-        return true;
+          consumer.resume(Set.of(tp));
+          log.info("Resumed partition {}", tp);
+       } catch (Exception e) {
+          log.error("Error during seek operation", e);
+          return false;
+       }
+       return true;
     }
 }
