@@ -1,0 +1,124 @@
+package com.rbs.cdna.utility.kafka.klistener.config;
+
+import com.rbs.cdna.utility.kafka.klistener.model.Topics;
+import com.rbs.cdna.utility.kafka.klistener.model.consumer.ConsumerTopic;
+import com.rbs.cdna.utility.kafka.klistener.model.consumer.factory.KafkaConsumerFactoryProperties;
+import com.rbs.cdna.utility.kafka.klistener.utils.ConsumerUtils;
+import com.rbs.cdna.utility.kafka.klistener.utils.KafkaConfigUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.support.TopicPartitionOffset;
+import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * The type Kafka consumer bean config.
+ */
+@Slf4j
+@Component
+public class KafkaConsumerBeanConfig {
+
+	/**
+	 * The Kafka configuration.
+	 */
+	@Autowired
+	KafkaConfiguration kafkaConfiguration;
+
+	/**
+	 * The Consumer utils.
+	 */
+	@Autowired
+	ConsumerUtils consumerUtils;
+
+	@Value("${kafka.config.max.journeys:5}")
+	private int noOfJourneys;
+
+	/**
+	 * Message listener container map map.
+	 *
+	 * @return the map
+	 */
+	@Bean("messageListenerContainerMap")
+	public Map<String, ConcurrentMessageListenerContainer<String, Object>> messageListenerContainerMap() {
+
+		Map<String, ConcurrentMessageListenerContainer<String, Object>> messageListenerContainerMap = new HashMap<>();
+		if (null != kafkaConfiguration) {
+			Map<String, Topics> kafkaTopics = kafkaConfiguration.getJourneys();
+			if (MapUtils.isNotEmpty(kafkaTopics)) {
+				prepareConsumers(messageListenerContainerMap, kafkaTopics);
+			}
+		}
+		return messageListenerContainerMap;
+	}
+
+	private void prepareConsumers(Map<String, ConcurrentMessageListenerContainer<String, Object>> messageListenerContainerMap, Map<String, Topics> kafkaTopics) {
+		if (kafkaTopics.size() <= noOfJourneys) {
+			kafkaTopics.forEach((journey, topics) -> {
+				if (null != topics.getSubscribe()) {
+					messageListenerContainerMap.put(KafkaConfigUtils.getKey(journey, topics.getSubscribe().getName()), createConsumerContainerPerTopic(journey, topics.getSubscribe()));
+				}
+			});
+		} else {
+			log.error("##################################################################################################################");
+			log.error("No listeners has been created. Number of 'kafka.config.journeys' configured must not be greater than {}.", noOfJourneys);
+			log.error("##################################################################################################################");
+		}
+	}
+
+	private ConcurrentMessageListenerContainer createConsumerContainerPerTopic(String journey, ConsumerTopic consumerTopic) {
+		ConcurrentMessageListenerContainer<String, Object> mlc = null;
+		if (null != consumerTopic) {
+			String containerCreationStatus = null;
+			try {
+				log.info("####################################### Preparing message listener container for=[journey={}, topic={}] #######################################", journey, consumerTopic.getName());
+				mlc = createMessageListenerContainer(consumerTopic, journey);
+				containerCreationStatus = "PREPARED";
+			} catch (Exception e) {
+				containerCreationStatus = "PREPARATION_FAILED";
+				log.error("Error occurred while creating the ConcurrentMessageListenerContainer for the journey={}, topic={}", journey, consumerTopic.getName(), e);
+			} finally {
+				log.info("ConcurrentMessageListenerContainer creation status={} for the journey={}, topic={}", containerCreationStatus, journey, consumerTopic.getName());
+				log.info("#############################################################################################################################################");
+			}
+		}
+		return mlc;
+	}
+
+	private ConcurrentMessageListenerContainer<String, Object> createMessageListenerContainer(ConsumerTopic consumerTopic, String journey) {
+
+		ConcurrentKafkaListenerContainerFactory<String, Object> factory = kafkaListenerContainerFactory(consumerTopic, journey);
+		String groupId = factory.getContainerProperties().getGroupId();
+		ConcurrentMessageListenerContainer<String, Object> container = getConcurrentMessageListenerContainer(consumerTopic, factory, groupId);
+		return container;
+	}
+
+	private ConcurrentMessageListenerContainer<String, Object> getConcurrentMessageListenerContainer(ConsumerTopic consumerTopic, ConcurrentKafkaListenerContainerFactory<String, Object> factory, String groupId) {
+		ConcurrentMessageListenerContainer<String, Object> mlc = null;
+		if (null != consumerTopic.getPartition()) {
+			TopicPartitionOffset topicPartitionOffset = new TopicPartitionOffset(consumerTopic.getName(), consumerTopic.getPartition());
+			mlc = factory.createContainer(topicPartitionOffset);
+		} else {
+			mlc = factory.createContainer(consumerTopic.getName().split(","));
+		}
+		mlc.getContainerProperties().setGroupId(groupId);
+		mlc.setBeanName(groupId);
+		return mlc;
+	}
+
+	private ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(ConsumerTopic consumerTopic, String journey) {
+
+		String listenerDetails = consumerUtils.getPropertyPath(journey, consumerTopic.getName(), "listener");
+		ConsumerFactory<String, Object> consumerFactoryObject = consumerUtils.consumerFactory(consumerTopic, journey, kafkaConfiguration);
+		KafkaConsumerFactoryProperties kafkaConsumerFactoryProperties = null != consumerTopic.getProperties() ? consumerTopic.getProperties().getConsumerFactoryProperties() : null;
+		ConcurrentKafkaListenerContainerFactory<String, Object> factory = consumerUtils.getKafkaListener(listenerDetails, consumerFactoryObject, kafkaConsumerFactoryProperties);
+		return factory;
+	}
+}
