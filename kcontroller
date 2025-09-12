@@ -1,0 +1,20 @@
+@RestController
+@RequestMapping("/kafka")
+public class KafkaControlController {
+
+    @Autowired
+    private KafkaConsumerBeanConfig kafkaConsumerBeanConfig;
+
+    @PostMapping("/seek")
+    public ResponseEntity<String> seek(@RequestParam String journey,
+                                       @RequestParam String topic,
+                                       @RequestParam int partition,
+                                       @RequestParam long offset) {
+        boolean result = kafkaConsumerBeanConfig.seek(journey, topic, partition, offset);
+        if (result) {
+            return ResponseEntity.ok("Seek operation successful");
+        } else {
+            return ResponseEntity.badRequest().body("Seek operation failed");
+        }
+    }
+}
