@@ -1,3 +1,31 @@
+package com.rbs.cdna.utility.kafka.klistener.config;
+
+import com.rbs.cdna.utility.kafka.klistener.model.Topics;
+import com.rbs.cdna.utility.kafka.klistener.model.consumer.ConsumerTopic;
+import com.rbs.cdna.utility.kafka.klistener.model.consumer.factory.KafkaConsumerFactoryProperties;
+import com.rbs.cdna.utility.kafka.klistener.utils.ConsumerUtils;
+import com.rbs.cdna.utility.kafka.klistener.utils.KafkaConfigUtils;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.common.TopicPartition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.listener.ConsumerAwareRebalanceListener;
+import org.springframework.kafka.support.TopicPartitionOffset;
+import org.springframework.stereotype.Component;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 @Slf4j
 @Component
 public class KafkaConsumerBeanConfig {
