@@ -1,0 +1,24 @@
+package com.rbs.cdna.listener.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class OffsetStoreData {
+
+    @JsonProperty("offset")
+    private Long offset;
+
+    public OffsetStoreData() {
+    }
+
+    public OffsetStoreData(Long offset) {
+        this.offset = offset;
+    }
+
+    public Long getOffset() {
+        return offset;
+    }
+
+    public void setOffset(Long offset) {
+        this.offset = offset;
+    }
+}
