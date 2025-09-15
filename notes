@@ -1,42 +1,34 @@
-container.getContainerProperties().setConsumerRebalanceListener(new ConsumerAwareRebalanceListener() {
+    private void prepareConsumers(Map<String, ConcurrentMessageListenerContainer<String, Object>> messageListenerContainerMap, Map<String, Topics> kafkaTopics) {
+        if (kafkaTopics.size() <= noOfJourneys) {
+            kafkaTopics.forEach((journey, topics) -> {
+                if (topics.getSubscribe() != null) {
+                    String key = KafkaConfigUtils.getKey(journey, topics.getSubscribe().getName());
+                    ConcurrentMessageListenerContainer<String, Object> container = createConsumerContainerPerTopic(journey, topics.getSubscribe());
+                    containerMap.put(key, container);
+                    assignedPartitionsMap.put(key, new HashSet<>());
 
-    @Override
-    public void onPartitionsAssigned(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
-        String containerKey = key;
+                    container.getContainerProperties().setConsumerRebalanceListener(new ConsumerAwareRebalanceListener() {
+                        @Override
+                        public void onPartitionsAssigned(Consumer<?, ?> consumer, Collection<TopicPartition> partitions) {
+                            assignedPartitionsMap.get(key).clear();
+                            assignedPartitionsMap.get(key).addAll(partitions);
+                            consumerMap.put(key, consumer);
+                            log.info("Partitions assigned for {}: {}", key, partitions);
+                        }
 
-        // Initialize if absent
-        assignedPartitionsMap.putIfAbsent(containerKey, new HashSet<>());
+                        @Override
+                        public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+                            assignedPartitionsMap.get(key).removeAll(partitions);
+                            consumerMap.remove(key);
+                            log.info("Partitions revoked for {}: {}", key, partitions);
+                        }
+                    });
 
-        assignedPartitionsMap.get(containerKey).clear();
-        assignedPartitionsMap.get(containerKey).addAll(partitions);
-
-        consumerMap.put(containerKey, consumer);
-
-        log.info("Partitions assigned for {}: {}", containerKey, partitions);
-
-        // Call the existing/default rebalance listener if it exists
-        ConsumerRebalanceListener originalListener = container.getContainerProperties().getConsumerRebalanceListener();
-        if (originalListener != null && originalListener != this) {
-            originalListener.onPartitionsAssigned(partitions);
+                    messageListenerContainerMap.put(key, container);
+                    container.start();
+                }
+            });
+        } else {
+            log.error("Configured journeys exceed allowed limit of {}", noOfJourneys);
         }
     }
-
-    @Override
-    public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-        String containerKey = key;
-
-        if (assignedPartitionsMap.containsKey(containerKey)) {
-            assignedPartitionsMap.get(containerKey).removeAll(partitions);
-        }
-
-        consumerMap.remove(containerKey);
-
-        log.info("Partitions revoked for {}: {}", containerKey, partitions);
-
-        // Call the existing/default rebalance listener if it exists
-        ConsumerRebalanceListener originalListener = container.getContainerProperties().getConsumerRebalanceListener();
-        if (originalListener != null && originalListener != this) {
-            originalListener.onPartitionsRevoked(partitions);
-        }
-    }
-});
