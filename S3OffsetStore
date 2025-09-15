@@ -1,0 +1,152 @@
+package com.rbs.cdna.listener.service.kafka;
+
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
+import com.amazonaws.services.s3.model.S3Object;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.ResourcePatternUtils;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+
+/**
+ * The type S 3 ref data service.
+ */
+@Slf4j
+@Service
+@EnableScheduling
+@SuppressWarnings("unused")
+public class S3OffsetStore {
+	private static final String DEFAULT_DATASET = "DefaultRefData";
+	private static OffsetStoreData OFFSETDATASTORE = new OffsetStoreData();
+	private static final String OFFSET_DATA_FOLDER = "offset-data/";
+	/**
+	 * The S 3 ref data properties.
+	 */
+	final S3OffsetDataProperties s3OffsetDataProperties;
+	/**
+	 * The Resource loader.
+	 */
+	final ResourceLoader resourceLoader;
+
+	final AmazonS3 amazonS3;
+	/**
+	 * The Object mapper.
+	 */
+	final ObjectMapper objectMapper = new ObjectMapper();
+
+	public S3OffsetStore(S3OffsetDataProperties s3OffsetDataProperties, ResourceLoader resourceLoader, AmazonS3 amazonS3) {
+		this.s3OffsetDataProperties = s3OffsetDataProperties;
+		this.resourceLoader = resourceLoader;
+		this.amazonS3 = amazonS3;
+	}
+
+	/**
+	 * Load Offset data.
+	 */
+	@PostConstruct
+	@Scheduled(cron = "${offset-data.aws.s3.cron-expression:0 0 0 1 1 ?}")
+	public void loadOffsetStoreData() {
+		if (!s3OffsetDataProperties.isEnable())
+			return;
+		if (s3OffsetDataProperties.isAwsConnection()) {
+			loadOffsetDataFromS3Bucket();
+		} else {
+			loadOffsetDataFromClasspath();
+		}
+	}
+
+	private void loadOffsetDataFromClasspath() {
+		OffsetStoreData loadedOffsetData = new OffsetStoreData();
+		try {
+			Resource resource = ResourcePatternUtils.getResourcePatternResolver(resourceLoader).getResource("classpath:offset-data/OffsetData.json");
+			if (resource != null && resource.exists()) {
+				try {
+					loadedOffsetData = objectMapper.readValue(resource.getInputStream(), new TypeReference<OffsetStoreData>() {
+					});
+				} catch (IOException e) {
+					log.error("error occurred while reading data from classpath for file {}", resource.getFilename(), e.getCause());
+				}
+			}
+		} catch (Exception e) {
+			log.error("error occurred while reading offset data from classpath", e.getCause());
+		}
+		if (null == loadedOffsetData) {
+			log.error("Latest Offset Data cache not loaded from classpath. Using the old data");
+			return;
+		}
+		// Update the static store with loaded data
+		OFFSETDATASTORE = loadedOffsetData;
+		log.info("Offset Data Cache loading completed from classpath.");
+	}
+
+	private void loadOffsetDataFromS3Bucket() {
+		String bucketName = s3OffsetDataProperties.getBucketName();
+		OffsetStoreData loadedOffsetData = null;
+
+		try {
+			log.info("amazon S3 configuration done awsBucketName {}", bucketName);
+			ListObjectsV2Request request = new ListObjectsV2Request()
+												   .withBucketName(bucketName)
+												   .withPrefix(OFFSET_DATA_FOLDER);
+
+			log.info("connected to amazon S3 bucket {}", bucketName);
+			ListObjectsV2Result result;
+			do {
+				result = amazonS3.listObjectsV2(request);
+				for (var objectSummary : result.getObjectSummaries()) {
+					OffsetStoreData fileOffsetData = loadOffsetDataFromS3Object(bucketName, objectSummary.getKey());
+					if (fileOffsetData != null) {
+						loadedOffsetData = fileOffsetData; // For now, use the last successfully loaded file
+						log.info("Successfully loaded offset data from S3 file: {}", objectSummary.getKey());
+					}
+				}
+				request.setContinuationToken(result.getNextContinuationToken());
+			} while (result.isTruncated());
+
+		} catch (Exception e) {
+			log.error("Error occurred during reading data from amazon S3 bucket: {}", bucketName, e);
+		}
+
+		if (loadedOffsetData == null) {
+			log.error("Latest Offset Data cache not loaded from S3. Using the old data");
+			return;
+		}
+
+		// Update the static store with loaded data
+		OFFSETDATASTORE = loadedOffsetData;
+		log.info("Offset Data Cache loading completed from S3.");
+	}
+
+	private com.rbs.cdna.listener.service.kafka.OffsetStoreData loadOffsetDataFromS3Object(String bucketName, String key) {
+		try (S3Object s3Object = amazonS3.getObject(bucketName, key)) {
+			log.info("loading cache data from amazon S3. file-name {}", key);
+
+			OffsetStoreData offsetStoreData = objectMapper.readValue(
+					s3Object.getObjectContent().getDelegateStream(),
+					new TypeReference<OffsetStoreData>() {
+					}
+			);
+
+			log.info("loaded the data from amazon S3. file-name {}", key);
+			return offsetStoreData;
+
+		} catch (IOException e) {
+			log.error("Error reading the file from amazon S3 bucket. file-name: {}", key, e);
+			return null;
+		}
+	}
+
+	public static OffsetStoreData getOffsetData() {
+		return OFFSETDATASTORE;
+	}
+}
+
