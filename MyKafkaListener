@@ -1,0 +1,91 @@
+package com.rbs.cdna.utility.kafka.klistener.listener;
+
+import com.rbs.cdna.utility.kafka.klistener.config.KafkaConsumerBeanConfig;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.TopicPartition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.listener.ConsumerAwareMessageListener;
+import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Kafka message listener where seek and offset commit logic is handled.
+ */
+@Slf4j
+@Component
+public class MyKafkaListener implements ConsumerAwareMessageListener<String, String> {
+
+    @Autowired
+    private KafkaConsumerBeanConfig kafkaConsumerBeanConfig;
+
+    @Override
+    public void onMessage(ConsumerRecord<String, String> record, Consumer<?, ?> consumer) {
+        String topic = record.topic();
+        int partition = record.partition();
+        long offset = record.offset();
+
+        TopicPartition tp = new TopicPartition(topic, partition);
+        String key = topic; // Or generate from journey+topic as needed
+
+        // Get assigned partitions and check if this partition is assigned to this container
+        Set<TopicPartition> assigned = kafkaConsumerBeanConfig.getAssignedPartitionsMap().get(key);
+        if (assigned == null || !assigned.contains(tp)) {
+            log.warn("Partition {} not assigned to this consumer. Skipping seek check.", tp);
+            processRecord(record);
+            return;
+        }
+
+        // Read offset info from external source (file or S3)
+        Long targetOffset = readOffsetFromExternalSource(topic, partition);
+
+        if (targetOffset != null && targetOffset != offset) {
+            try {
+                log.info("Seeking partition {} from offset {} to {}", tp, offset, targetOffset);
+
+                // Pause the partition before seeking
+                consumer.pause(Set.of(tp));
+
+                // Seek to the target offset
+                consumer.seek(tp, targetOffset);
+
+                // Resume the partition
+                consumer.resume(Set.of(tp));
+
+                log.info("Seeked partition {} to offset {}", tp, targetOffset);
+
+            } catch (Exception e) {
+                log.error("Error during seeking partition {}", tp, e);
+            }
+        }
+
+        // After seek logic, process the message normally
+        processRecord(record);
+
+        // Optionally commit offset if needed here or elsewhere
+    }
+
+    /**
+     * Placeholder for processing the message
+     */
+    private void processRecord(ConsumerRecord<String, String> record) {
+        log.info("Processing message: topic={}, partition={}, offset={}, value={}",
+                record.topic(), record.partition(), record.offset(), record.value());
+        // Add your message processing logic here
+    }
+
+    /**
+     * Read the offset from external source like a file or AWS S3
+     */
+    private Long readOffsetFromExternalSource(String topic, int partition) {
+        // TODO: Implement the logic to read from file or S3 bucket
+        // For demonstration, let's say it always returns 100 for specific topic-partition
+        if ("your-topic".equals(topic) && partition == 0) {
+            return 100L;
+        }
+        return null;
+    }
+}
