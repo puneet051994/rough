@@ -1,15 +1,19 @@
-package com.rbs.cdna.utility.kafka.klistener.listener;
+package com.rbs.cdna.listener.service.kafka;
 
 import com.rbs.cdna.utility.kafka.klistener.config.KafkaConsumerBeanConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.listener.AcknowledgingConsumerAwareMessageListener;
 import org.springframework.kafka.listener.ConsumerAwareMessageListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
+import java.time.Duration;
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -17,75 +21,72 @@ import java.util.Set;
  */
 @Slf4j
 @Component
-public class MyKafkaListener implements ConsumerAwareMessageListener<String, String> {
+public class KafkaConsumerSeekTemplateListener implements AcknowledgingConsumerAwareMessageListener<String, String> {
 
-    @Autowired
-    private KafkaConsumerBeanConfig kafkaConsumerBeanConfig;
+	@Autowired
+	private KafkaConsumerBeanConfig kafkaConsumerBeanConfig;
 
-    @Override
-    public void onMessage(ConsumerRecord<String, String> record, Consumer<?, ?> consumer) {
-        String topic = record.topic();
-        int partition = record.partition();
-        long offset = record.offset();
+	boolean flag = false;
+	boolean seekFlag = true;
 
-        TopicPartition tp = new TopicPartition(topic, partition);
-        String key = topic; // Or generate from journey+topic as needed
+	@Override
+	public void onMessage(ConsumerRecord<String, String> data, Acknowledgment acknowledgment, Consumer<?, ?> consumer) {
+		String topic = data.topic();
+		int partition = data.partition();
+		long offset = data.offset();
 
-        // Get assigned partitions and check if this partition is assigned to this container
-        Set<TopicPartition> assigned = kafkaConsumerBeanConfig.getAssignedPartitionsMap().get(key);
-        if (assigned == null || !assigned.contains(tp)) {
-            log.warn("Partition {} not assigned to this consumer. Skipping seek check.", tp);
-            processRecord(record);
-            return;
-        }
+		TopicPartition tp = new TopicPartition(topic, partition);
 
-        // Read offset info from external source (file or S3)
-        Long targetOffset = readOffsetFromExternalSource(topic, partition);
+		// Read offset info from external source (file or S3)
+		Long targetOffset = readOffsetFromExternalSource(topic, partition);
 
-        if (targetOffset != null && targetOffset != offset) {
-            try {
-                log.info("Seeking partition {} from offset {} to {}", tp, offset, targetOffset);
+		if (targetOffset != null && targetOffset != offset) {
+			try {
+				log.info("Seeking partition {} from offset {} to {}", tp, offset, targetOffset);
 
-                // Pause the partition before seeking
-                consumer.pause(Set.of(tp));
+				// Pause the partition before seeking
+				consumer.pause(Set.of(tp));
 
-                // Seek to the target offset
-                consumer.seek(tp, targetOffset);
+				// Seek to the target offset
+				consumer.seek(tp, targetOffset);
 
-                // Resume the partition
-                consumer.resume(Set.of(tp));
+				// Resume the partition
+				consumer.resume(Set.of(tp));
 
-                log.info("Seeked partition {} to offset {}", tp, targetOffset);
+				log.info("Seeked partition {} to offset {}", tp, targetOffset);
+				seekFlag = false;
+			} catch (Exception e) {
+				log.error("Error during seeking partition {}", tp, e);
+			}
+		}
 
-            } catch (Exception e) {
-                log.error("Error during seeking partition {}", tp, e);
-            }
-        }
+		// After seek logic, process the message normally
+		if (seekFlag) {
+			processRecord(data);
+			acknowledgment.acknowledge();
+		} else {
+			acknowledgment.nack(Duration.ofMillis(1000));
+		}
+	}
 
-        // After seek logic, process the message normally
-        processRecord(record);
+	/**
+	 * Placeholder for processing the message
+	 */
+	private void processRecord(ConsumerRecord<String, String> record) {
+		log.info("Processing message: topic={}, partition={}, offset={}",
+				record.topic(), record.partition(), record.offset());
+	}
 
-        // Optionally commit offset if needed here or elsewhere
-    }
+	/**
+	 * Read the offset from external source like a file or AWS S3
+	 */
+	private Long readOffsetFromExternalSource(String topic, int partition) {
+		// TODO: Implement the logic to read from file or S3 bucket
+		if ("cdna.identity.api.eobao.onboard".equals(topic) && partition == 0 && !flag) {
+			flag = true;
+			return 1357L;
+		}
+		return null;
+	}
 
-    /**
-     * Placeholder for processing the message
-     */
-    private void processRecord(ConsumerRecord<String, String> record) {
-        log.info("Processing message: topic={}, partition={}, offset={}, value={}",
-                record.topic(), record.partition(), record.offset(), record.value());
-        // Add your message processing logic here
-    }
-
-    /**
-     * Read the offset from external source like a file or AWS S3
-     */
-    private Long readOffsetFromExternalSource(String topic, int partition) {
-        // TODO: Implement the logic to read from file or S3 bucket
-        // For demonstration, let's say it always returns 100 for specific topic-partition
-        if ("your-topic".equals(topic) && partition == 0) {
-            return 100L;
-        }
-        return null;
-    }
 }
