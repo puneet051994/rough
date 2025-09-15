@@ -1,0 +1,137 @@
+package com.rbs.cdna.listener.service.kafka;
+
+import com.rbs.cdna.listener.model.OffsetStoreData;
+import com.rbs.cdna.listener.model.S3OffsetDataProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+@Service
+public class S3OffsetStore {
+
+    private static final Logger logger = LoggerFactory.getLogger(S3OffsetStore.class);
+
+    private final S3OffsetDataProperties s3OffsetDataProperties;
+    private final AmazonS3 amazonS3;
+    private final ResourceLoader resourceLoader;
+    private final ObjectMapper objectMapper;
+
+    // Lock for concurrency control per topic-partition
+    private final Lock lock = new ReentrantLock();
+
+    public S3OffsetStore(S3OffsetDataProperties s3OffsetDataProperties,
+                         AmazonS3 amazonS3,
+                         ResourceLoader resourceLoader,
+                         ObjectMapper objectMapper) {
+        this.s3OffsetDataProperties = s3OffsetDataProperties;
+        this.amazonS3 = amazonS3;
+        this.resourceLoader = resourceLoader;
+        this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Reads offset for given topic and partition.
+     */
+    public Long readOffset(String topic, int partition) {
+        if (!s3OffsetDataProperties.isEnable()) {
+            logger.warn("Offset tracking is disabled.");
+            return null;
+        }
+        if (s3OffsetDataProperties.isAwsConnection()) {
+            return readOffsetFromS3(topic, partition);
+        } else {
+            return readOffsetFromResource(topic, partition);
+        }
+    }
+
+    private Long readOffsetFromS3(String topic, int partition) {
+        String key = buildS3Key(topic, partition);
+        try (InputStream is = amazonS3.getObject(new GetObjectRequest(s3OffsetDataProperties.getBucketName(), key)).getObjectContent()) {
+            OffsetStoreData data = objectMapper.readValue(is, OffsetStoreData.class);
+            logger.info("Read offset from S3 for topic={}, partition={}: {}", topic, partition, data.getOffset());
+            return data.getOffset();
+        } catch (Exception e) {
+            logger.error("Error reading offset from S3 for topic={}, partition={}", topic, partition, e);
+            return null;
+        }
+    }
+
+    private Long readOffsetFromResource(String topic, int partition) {
+        String path = "classpath:offsets/" + topic + "/" + partition + ".json";
+        try (InputStream is = resourceLoader.getResource(path).getInputStream()) {
+            OffsetStoreData data = objectMapper.readValue(is, OffsetStoreData.class);
+            logger.info("Read offset from resource for topic={}, partition={}: {}", topic, partition, data.getOffset());
+            return data.getOffset();
+        } catch (Exception e) {
+            logger.error("Error reading offset from resource for topic={}, partition={}", topic, partition, e);
+            return null;
+        }
+    }
+
+    /**
+     * Writes offset for given topic and partition.
+     */
+    public void writeOffset(String topic, int partition, Long offset) {
+        if (!s3OffsetDataProperties.isEnable()) {
+            logger.warn("Offset tracking is disabled.");
+            return;
+        }
+        lock.lock();
+        try {
+            if (s3OffsetDataProperties.isAwsConnection()) {
+                writeOffsetToS3(topic, partition, offset);
+            } else {
+                writeOffsetToResource(topic, partition, offset);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void writeOffsetToS3(String topic, int partition, Long offset) {
+        String key = buildS3Key(topic, partition);
+        File tempFile = null;
+        try {
+            tempFile = File.createTempFile("offset", ".json");
+            objectMapper.writeValue(tempFile, new OffsetStoreData(offset));
+            amazonS3.putObject(new PutObjectRequest(s3OffsetDataProperties.getBucketName(), key, tempFile));
+            logger.info("Wrote offset to S3 for topic={}, partition={}: {}", topic, partition, offset);
+        } catch (Exception e) {
+            logger.error("Error writing offset to S3 for topic={}, partition={}", topic, partition, e);
+        } finally {
+            if (tempFile != null) {
+                tempFile.delete();
+            }
+        }
+    }
+
+    private void writeOffsetToResource(String topic, int partition, Long offset) {
+        String path = "offsets/" + topic + "/" + partition + ".json";
+        File file = new File(path);
+        file.getParentFile().mkdirs();
+        try (OutputStream os = Files.newOutputStream(file.toPath())) {
+            objectMapper.writeValue(os, new OffsetStoreData(offset));
+            logger.info("Wrote offset to resource for topic={}, partition={}: {}", topic, partition, offset);
+        } catch (Exception e) {
+            logger.error("Error writing offset to resource for topic={}, partition={}", topic, partition, e);
+        }
+    }
+
+    private String buildS3Key(String topic, int partition) {
+        return String.format("offsets/%s/%d.json", topic, partition);
+    }
+}
