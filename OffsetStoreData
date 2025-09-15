@@ -1,0 +1,16 @@
+package com.rbs.cdna.listener.service.kafka;
+
+import java.util.Map;
+
+public class OffsetStoreData {
+	private Map<String, Map<String, Long>> topicOffsets;
+
+	public Map<String, Map<String, Long>> getTopicOffsets() {
+		return topicOffsets;
+	}
+
+	public void setTopicOffsets(Map<String, Map<String, Long>> topicOffsets) {
+		this.topicOffsets = topicOffsets;
+	}
+}
+
