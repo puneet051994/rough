@@ -1,0 +1,103 @@
+package com.rbs.cdna.listener.service.kafka;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
+@Service
+public class S3OffsetStore {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${offsets.base-dir:src/main/resources/offsets}")
+    private String baseDir;
+
+    // Cache to hold offsets in memory
+    private final Map<String, Map<Integer, Long>> offsetCache = new HashMap<>();
+
+    /**
+     * Load offset data from resource folder at startup.
+     */
+    @PostConstruct
+    public void loadOffsetStoreData() {
+        File base = new File(baseDir);
+        if (!base.exists()) {
+            log.warn("Offsets base directory does not exist: {}", base.getAbsolutePath());
+            return;
+        }
+
+        for (File topicDir : base.listFiles(File::isDirectory)) {
+            String topic = topicDir.getName();
+            Map<Integer, Long> partitionOffsets = new HashMap<>();
+
+            for (File partitionFile : topicDir.listFiles((dir, name) -> name.endsWith(".json"))) {
+                try {
+                    String name = partitionFile.getName(); // e.g., "0.json"
+                    int partition = Integer.parseInt(name.replace(".json", ""));
+                    OffsetStoreData data = objectMapper.readValue(partitionFile, OffsetStoreData.class);
+                    partitionOffsets.put(partition, data.getOffset());
+                } catch (Exception e) {
+                    log.error("Error reading offset file: {}", partitionFile.getAbsolutePath(), e);
+                }
+            }
+
+            offsetCache.put(topic, partitionOffsets);
+            log.info("Loaded offsets for topic {}: {}", topic, partitionOffsets);
+        }
+    }
+
+    /**
+     * Read offset from cache or file if not present in memory.
+     */
+    public Long readOffset(String topic, int partition) {
+        Map<Integer, Long> partitions = offsetCache.get(topic);
+        if (partitions != null && partitions.containsKey(partition)) {
+            return partitions.get(partition);
+        }
+
+        // fallback: read from file
+        try {
+            File file = new File(baseDir + "/" + topic + "/" + partition + ".json");
+            if (file.exists()) {
+                OffsetStoreData data = objectMapper.readValue(file, OffsetStoreData.class);
+                partitions = offsetCache.computeIfAbsent(topic, k -> new HashMap<>());
+                partitions.put(partition, data.getOffset());
+                return data.getOffset();
+            }
+        } catch (Exception e) {
+            log.error("Error reading offset from file for topic={}, partition={}", topic, partition, e);
+        }
+        return null;
+    }
+
+    /**
+     * Write offset to file and update cache.
+     */
+    public void writeOffset(String topic, int partition, Long offset) {
+        try {
+            File file = new File(baseDir + "/" + topic + "/" + partition + ".json");
+            file.getParentFile().mkdirs(); // create directories if not exist
+
+            try (OutputStream os = Files.newOutputStream(file.toPath())) {
+                objectMapper.writeValue(os, new OffsetStoreData(offset));
+                log.info("Wrote offset to file for topic={}, partition={}, offset={}", topic, partition, offset);
+            }
+
+            // update cache
+            offsetCache.computeIfAbsent(topic, k -> new HashMap<>()).put(partition, offset);
+
+        } catch (Exception e) {
+            log.error("Error writing offset to file for topic={}, partition={}", topic, partition, e);
+        }
+    }
+
+}
