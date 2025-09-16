@@ -1,0 +1,110 @@
+package com.rbs.cdna.listener.service.kafka;
+
+import com.rbs.cdna.listener.configuration.MessageScopedBeanManager;
+import com.rbs.cdna.listener.service.KafkaListenerService;
+import com.rbs.cdna.listener.util.MDCLogger;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.TopicPartition;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.listener.AcknowledgingConsumerAwareMessageListener;
+import org.springframework.kafka.listener.AcknowledgingMessageListener;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static com.rbs.cdna.listener.domain.ApplicationConstants.*;
+import static com.rbs.cdna.listener.service.CddListenerTransformationService.DWS_REQUEST_CORRELATION_ID;
+import static java.lang.System.currentTimeMillis;
+
+@Slf4j
+@Service
+public class KafkaTemplateListener implements AcknowledgingConsumerAwareMessageListener<String, Object> {
+	public static final Map<String, String> retryRequestCorrelationIdMap = new ConcurrentHashMap<>();
+	@Value("${spring.application.name}")
+	String appName;
+	@Value("${aws.namespace}")
+	String awsNamespace;
+	@Autowired
+	private KafkaListenerService kafkaListenerService;
+	@Autowired
+	MessageScopedBeanManager beanConfiguration;
+	@Autowired
+	S3OffsetStore s3OffsetStore;
+
+	@Override
+	public void onMessage(ConsumerRecord<String, Object> record, Acknowledgment acknowledgment, Consumer<?, ?> consumer) {
+		String topic = record.topic();
+		int partition = record.partition();
+		long offset = record.offset();
+		Long targetOffset = s3OffsetStore.readOffset(topic, partition);
+		boolean seekFlag = false;
+		if (targetOffset != null && targetOffset != offset) {
+			seekFlag = seekToTargetOffsetMessage(consumer, topic, partition, offset, targetOffset, acknowledgment);
+		}
+
+		if (!seekFlag) {
+			String mdcCorrIdKey = record.topic() + "-" + record.partition() + "-" + record.offset();
+			String correlationId = retryRequestCorrelationIdMap.get(mdcCorrIdKey);
+			long start = System.currentTimeMillis();
+			String statusCode = "200";
+			if (Objects.nonNull(record)) {
+				Map<String, String> contextMap = Optional.ofNullable(MDC.getCopyOfContextMap()).orElse(new HashMap<>());
+				if (contextMap != null) {
+					if (StringUtils.isNotBlank(correlationId)) {
+						contextMap.put(DWS_REQUEST_CORRELATION_ID, correlationId);
+						MDC.setContextMap(contextMap);
+					} else {
+						String uuid = UUID.randomUUID().toString();
+						retryRequestCorrelationIdMap.put(mdcCorrIdKey, uuid);
+						MDC.put(DWS_REQUEST_CORRELATION_ID, uuid);
+					}
+				}
+				beanConfiguration.createAuditInfo();
+				try {
+					log.info(String.format("Message processing started from topic %s at offset %s and partition %s", record.topic(), record.offset(), record.partition()));
+					kafkaListenerService.processIncomingMessage(record, acknowledgment);
+					log.info("Total Execution time to process consumeMessage record from {} at offset {}, partition {} and time taken is {}ms", record.topic(), record.offset(), record.partition(), System.currentTimeMillis() - start);
+				} catch (Exception e) {
+					statusCode = "500";
+					log.error(String.format("Exception occurred in %s listener at offset %s and partition %s", record.topic(), record.offset(), record.partition()), e);
+				} finally {
+					MDCLogger.writeToMDCLog(MDC.get(DWS_REQUEST_CORRELATION_ID), MDC.get(REQUESTOR), appName, awsNamespace, MESSAGE_CONSUMED, KAFKA_CONSUMER.concat(appName), statusCode, start, currentTimeMillis(), record.topic());
+					MDC.clear();
+				}
+			}
+		}
+	}
+
+	private boolean seekToTargetOffsetMessage(Consumer<?, ?> consumer, String topic, int partition, Long offset, Long targetOffset, Acknowledgment acknowledgment) {
+		TopicPartition tp = new TopicPartition(topic, partition);
+		if (targetOffset != null && targetOffset != offset) {
+			try {
+				log.info("Seeking partition {} from offset {} to {}", tp, offset, targetOffset);
+
+				// Pause the partition before seeking
+				consumer.pause(Set.of(tp));
+
+				// Seek to the target offset
+				consumer.seek(tp, targetOffset);
+
+				// Resume the partition
+				consumer.resume(Set.of(tp));
+
+				log.info("Seeked partition {} to offset {}", tp, targetOffset);
+				acknowledgment.acknowledge();
+				return true;
+			} catch (Exception e) {
+				log.error("Error during seeking partition {}", tp, e);
+			}
+		}
+		return false;
+	}
+
+}
