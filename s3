@@ -1,115 +1,87 @@
-package com.rbs.cdna.listener.service.kafka;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import javax.annotation.PostConstruct;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-/**
- * Reads offset files from S3 and caches them in memory.
- */
-@Slf4j
-@Component
 public class S3OffsetStore {
 
-    @Value("${aws.s3.bucket-name}")
-    private String bucketName;
+    private final AmazonS3 s3Client;
+    private final String bucketName;
+    private final String offsetsPrefix;
 
-    @Value("${aws.s3.offsets-prefix}")
-    private String offsetsPrefix;
+    // Cache to store offsets
+    private final Map<String, Map<Integer, Long>> offsetCache = new HashMap<>();
 
-    private final Map<String, Map<Integer, Long>> offsetsCache = new ConcurrentHashMap<>();
-
-    private S3Client s3Client;
-    private ObjectMapper objectMapper = new ObjectMapper();
-
-    @PostConstruct
-    public void init() {
-        this.s3Client = S3Client.builder()
-                .region(Region.of("us-east-1")) // Set as per your region or configure
-                .credentialsProvider(DefaultCredentialsProvider.create())
-                .build();
-
-        loadOffsetsFromS3();
+    public S3OffsetStore(AmazonS3 s3Client, String bucketName, String offsetsPrefix) {
+        this.s3Client = s3Client;
+        this.bucketName = bucketName;
+        this.offsetsPrefix = offsetsPrefix;
     }
 
-    public Map<String, Map<Integer, Long>> getOffsetsCache() {
-        return offsetsCache;
-    }
-
-    private void loadOffsetsFromS3() {
+    public void loadOffsets() {
         try {
-            ListObjectsV2Request listReq = ListObjectsV2Request.builder()
-                    .bucket(bucketName)
-                    .prefix(offsetsPrefix.endsWith("/") ? offsetsPrefix : offsetsPrefix + "/")
-                    .build();
+            ListObjectsV2Request request = new ListObjectsV2Request()
+                    .withBucketName(bucketName)
+                    .withPrefix(offsetsPrefix);
 
-            ListObjectsV2Response listRes = s3Client.listObjectsV2(listReq);
+            ListObjectsV2Result result;
+            do {
+                result = s3Client.listObjectsV2(request);
+                List<S3ObjectSummary> objects = result.getObjectSummaries();
 
-            List<S3Object> objects = listRes.contents();
-
-            if (objects.isEmpty()) {
-                log.warn("No offset files found in bucket {} with prefix {}", bucketName, offsetsPrefix);
-                return;
-            }
-
-            for (S3Object obj : objects) {
-                String key = obj.key(); // e.g., offsets/topic1/0.json
-                try {
-                    processFile(key);
-                } catch (Exception e) {
-                    log.error("Error processing offset file: {}", key, e);
+                for (S3ObjectSummary object : objects) {
+                    String key = object.getKey(); // e.g., "offsets/topic1/0.json"
+                    processObject(key);
                 }
+                // Continue listing if more pages exist
+                request.setContinuationToken(result.getNextContinuationToken());
+            } while (result.isTruncated());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Add proper error handling or fallback logic here
+        }
+    }
+
+    private void processObject(String key) {
+        try {
+            // Extract topic and partition from the key
+            // Example key: offsets/cdna.identity.api.eobao.onboard/0.json
+            String[] parts = key.split("/");
+            if (parts.length >= 3) {
+                String topic = parts[1]; // "cdna.identity.api.eobao.onboard"
+                String partitionFile = parts[2]; // "0.json"
+                int partition = Integer.parseInt(partitionFile.replace(".json", ""));
+
+                // Read the offset from S3
+                Long offset = readOffsetFromS3(key);
+
+                offsetCache.computeIfAbsent(topic, t -> new HashMap<>())
+                           .put(partition, offset);
+
+                System.out.println("Loaded offset for topic " + topic + ", partition " + partition + ": " + offset);
             }
         } catch (Exception e) {
-            log.error("Failed to load offsets from S3", e);
+            e.printStackTrace();
+            // Handle malformed keys or conversion errors
         }
     }
 
-    private void processFile(String key) throws Exception {
-        GetObjectRequest getReq = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-                s3Client.getObject(getReq)))) {
-
-            Map<String, Object> jsonMap = objectMapper.readValue(reader, Map.class);
-
-            Long offset = Long.valueOf(jsonMap.get("offset").toString());
-
-            String[] parts = key.split("/");
-            if (parts.length < 3) {
-                throw new IllegalArgumentException("Invalid offset file path: " + key);
-            }
-            String topic = parts[1];
-            String partitionStr = parts[2].replace(".json", "");
-            int partition = Integer.parseInt(partitionStr);
-
-            offsetsCache.computeIfAbsent(topic, k -> new ConcurrentHashMap<>())
-                    .put(partition, offset);
-
-            log.info("Loaded offset for topic={} partition={} offset={}", topic, partition, offset);
+    private Long readOffsetFromS3(String key) {
+        try {
+            return Long.parseLong(s3Client.getObjectAsString(bucketName, key).trim());
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Return null or handle error if file is unreadable
+            return null;
         }
     }
 
-    public Long readOffset(String topic, int partition) {
-        Map<Integer, Long> topicOffsets = offsetsCache.get(topic);
-        if (topicOffsets != null) {
-            return topicOffsets.get(partition);
-        }
-        return null;
+    public Long getOffset(String topic, int partition) {
+        return offsetCache.getOrDefault(topic, new HashMap<>()).get(partition);
     }
 }
