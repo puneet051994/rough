@@ -1,0 +1,61 @@
+@Bean("restTemplateWithMTLS")
+@Lazy
+@Scope(SCOPE_PROTOTYPE)
+public RestTemplate restTemplateWithMTLS(
+        RestConfig restConfig,
+        ResponseServerErrorHandler responseServerErrorHandler) throws Exception {
+
+    RequestConfig requestConfig = RequestConfig.custom()
+            .setConnectionKeepAlive(Timeout.of(Duration.ofMillis(httpConfig.getConnectionTimeout())))
+            .setConnectionRequestTimeout(Timeout.of(Duration.ofMillis(httpConfig.getConnectionTimeout())))
+            .setResponseTimeout(Timeout.of(Duration.ofMillis(httpConfig.getSocketTimeout())))
+            .build();
+
+    // Load client keystore
+    KeyStore keyStore = KeyStore.getInstance("PKCS12");
+    try (FileInputStream keystoreStream = new FileInputStream(restConfig.getKeystorePath())) {
+        keyStore.load(keystoreStream, restConfig.getKeystorePassword().toCharArray());
+    }
+
+    // Load truststore
+    KeyStore trustStore = KeyStore.getInstance("PKCS12");
+    try (FileInputStream truststoreStream = new FileInputStream(restConfig.getTruststorePath())) {
+        trustStore.load(truststoreStream, restConfig.getTruststorePassword().toCharArray());
+    }
+
+    // Build SSLContext
+    SSLContext sslContext = SSLContexts.custom()
+            .loadKeyMaterial(keyStore, restConfig.getKeyPassword().toCharArray())
+            .loadTrustMaterial(trustStore, null)
+            .build();
+
+    // Create connection manager with SSL
+    org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory sslSocketFactory =
+            new org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory(
+                    sslContext,
+                    NoopHostnameVerifier.INSTANCE // optional: disable hostname verification
+            );
+
+    org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager connManager =
+            org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder.create()
+                    .setSSLSocketFactory(sslSocketFactory)
+                    .build();
+
+    // Build the HTTP client
+    CloseableHttpClient httpClient = HttpClients.custom()
+            .setConnectionManager(connManager)
+            .setDefaultRequestConfig(requestConfig)
+            .build();
+
+    // Inject into RestTemplate
+    CorrelationIdClientHttpRequestFactory correlationIdClientHttpRequestFactory =
+            new CorrelationIdClientHttpRequestFactory(httpClient, true);
+
+    RestTemplate restTemplate = new RestTemplate(correlationIdClientHttpRequestFactory);
+
+    if (restConfig.isResponseServerErrorHandler()) {
+        restTemplate.setErrorHandler(responseServerErrorHandler);
+    }
+
+    return restTemplate;
+}
