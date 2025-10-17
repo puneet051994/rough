@@ -1,0 +1,766 @@
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.187 UTC|ClientHello.java:639|Produced ClientHello handshake message (
+"ClientHello": {
+  "client version"      : "TLSv1.2",
+  "random"              : "B5612A285851CC2F6AA2912F89542C48D894C9FA772E651ECECD788E7A7DB213",
+  "session id"          : "41CAA9A41E7B73539C4997B4DDDAA315009D01783EB063B52AE77CB3A4F838E0",
+  "cipher suites"       : "[TLS_AES_256_GCM_SHA384(0x1302), TLS_AES_128_GCM_SHA256(0x1301), TLS_CHACHA20_POLY1305_SHA256(0x1303), TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384(0xC02C), TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256(0xC02B), TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256(0xCCA9), TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384(0xC030), TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256(0xCCA8), TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256(0xC02F), TLS_DHE_RSA_WITH_AES_256_GCM_SHA384(0x009F), TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256(0xCCAA), TLS_DHE_DSS_WITH_AES_256_GCM_SHA384(0x00A3), TLS_DHE_RSA_WITH_AES_128_GCM_SHA256(0x009E), TLS_DHE_DSS_WITH_AES_128_GCM_SHA256(0x00A2), TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384(0xC024), TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384(0xC028), TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256(0xC023), TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256(0xC027), TLS_DHE_RSA_WITH_AES_256_CBC_SHA256(0x006B), TLS_DHE_DSS_WITH_AES_256_CBC_SHA256(0x006A), TLS_DHE_RSA_WITH_AES_128_CBC_SHA256(0x0067), TLS_DHE_DSS_WITH_AES_128_CBC_SHA256(0x0040), TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA(0xC00A), TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA(0xC014), TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA(0xC009), TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA(0xC013), TLS_DHE_RSA_WITH_AES_256_CBC_SHA(0x0039), TLS_DHE_DSS_WITH_AES_256_CBC_SHA(0x0038), TLS_DHE_RSA_WITH_AES_128_CBC_SHA(0x0033), TLS_DHE_DSS_WITH_AES_128_CBC_SHA(0x0032), TLS_RSA_WITH_AES_256_GCM_SHA384(0x009D), TLS_RSA_WITH_AES_128_GCM_SHA256(0x009C), TLS_RSA_WITH_AES_256_CBC_SHA256(0x003D), TLS_RSA_WITH_AES_128_CBC_SHA256(0x003C), TLS_RSA_WITH_AES_256_CBC_SHA(0x0035), TLS_RSA_WITH_AES_128_CBC_SHA(0x002F), TLS_EMPTY_RENEGOTIATION_INFO_SCSV(0x00FF)]",
+  "compression methods" : "00",
+  "extensions"          : [
+    "server_name (0)": {
+      type=host_name (0), value=address-service.docdev.shared.banksvcs.net
+    },
+    "status_request (5)": {
+      "certificate status type": ocsp
+      "OCSP status request": {
+        "responder_id": <empty>
+        "request extensions": {
+          <empty>
+        }
+      }
+    },
+    "supported_groups (10)": {
+      "versions": [x25519, secp256r1, secp384r1, secp521r1, x448, ffdhe2048, ffdhe3072, ffdhe4096, ffdhe6144, ffdhe8192]
+    },
+    "ec_point_formats (11)": {
+      "formats": [uncompressed]
+    },
+    "status_request_v2 (17)": {
+      "cert status request": {
+        "certificate status type": ocsp_multi
+        "OCSP status request": {
+          "responder_id": <empty>
+          "request extensions": {
+            <empty>
+          }
+        }
+      }
+    },
+    "extended_master_secret (23)": {
+      <empty>
+    },
+    "session_ticket (35)": {
+      <empty>
+    },
+    "signature_algorithms (13)": {
+      "signature schemes": [ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384, ecdsa_secp521r1_sha512, ed25519, ed448, rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, rsa_pss_rsae_sha512, rsa_pss_pss_sha256, rsa_pss_pss_sha384, rsa_pss_pss_sha512, rsa_pkcs1_sha256, rsa_pkcs1_sha384, rsa_pkcs1_sha512, dsa_sha256, ecdsa_sha224, rsa_sha224, dsa_sha224, ecdsa_sha1, rsa_pkcs1_sha1, dsa_sha1]
+    },
+    "supported_versions (43)": {
+      "versions": [TLSv1.3, TLSv1.2]
+    },
+    "psk_key_exchange_modes (45)": {
+      "ke_modes": [psk_dhe_ke]
+    },
+    "signature_algorithms_cert (50)": {
+      "signature schemes": [ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384, ecdsa_secp521r1_sha512, ed25519, ed448, rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, rsa_pss_rsae_sha512, rsa_pss_pss_sha256, rsa_pss_pss_sha384, rsa_pss_pss_sha512, rsa_pkcs1_sha256, rsa_pkcs1_sha384, rsa_pkcs1_sha512, dsa_sha256, ecdsa_sha224, rsa_sha224, dsa_sha224, ecdsa_sha1, rsa_pkcs1_sha1, dsa_sha1]
+    },
+    "key_share (51)": {
+      "client_shares": [
+        {
+          "named group": x25519
+          "key_exchange": {
+            0000: 91 58 C8 33 93 74 4D 59   E7 6D 2E EA D3 3E 25 82  .X.3.tMY.m...>%.
+            0010: 31 E4 FB BA 85 1F 77 AD   9D 4E DC 92 C0 45 12 54  1.....w..N...E.T
+          }
+        },
+        {
+          "named group": secp256r1
+          "key_exchange": {
+            0000: 04 AE F8 52 B7 4F FB 73   89 D7 E0 40 20 B4 D6 6F  ...R.O.s...@ ..o
+            0010: 6A B7 BA 0B 8B F0 7F 5C   17 AF 6B 00 49 05 1D 2A  j......\..k.I..*
+            0020: C3 E5 6D D2 2D BD 6C F9   CC DF 71 78 C2 73 DE FB  ..m.-.l...qx.s..
+            0030: C1 3B 03 69 15 11 84 0F   F6 A9 DD BC BA 9D C6 90  .;.i............
+            0040: 69
+          }
+        },
+      ]
+    }
+  ]
+}
+)
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.191 UTC|ServerHello.java:897|Consuming ServerHello handshake message (
+"ServerHello": {
+  "server version"      : "TLSv1.2",
+  "random"              : "797A87E65999BA1D706EAD08803EBCA7F80D01FA51F1FEA6CC9D1400922F6123",
+  "session id"          : "45642AF2D73F96DFDDCAB7F035FD5F4C4145E6EF6F7D2EB9584574D654AC5BE5",
+  "cipher suite"        : "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256(0xC02F)",
+  "compression methods" : "00",
+  "extensions"          : [
+    "server_name (0)": {
+      <empty extension_data field>
+    },
+    "ec_point_formats (11)": {
+      "formats": [uncompressed]
+    },
+    "renegotiation_info (65,281)": {
+      "renegotiated connection": [<no renegotiated connection>]
+    },
+    "extended_master_secret (23)": {
+      <empty>
+    }
+  ]
+}
+)
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.191 UTC|SSLExtensions.java:185|Ignore unavailable extension: supported_versions
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.191 UTC|ServerHello.java:993|Negotiated protocol version: TLSv1.2
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.192 UTC|SSLExtensions.java:204|Consumed extension: renegotiation_info
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:204|Consumed extension: server_name
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:185|Ignore unavailable extension: max_fragment_length
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:185|Ignore unavailable extension: status_request
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:204|Consumed extension: ec_point_formats
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:185|Ignore unavailable extension: status_request_v2
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:204|Consumed extension: extended_master_secret
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:185|Ignore unavailable extension: session_ticket
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:175|Ignore unsupported extension: supported_versions
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:175|Ignore unsupported extension: key_share
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:204|Consumed extension: renegotiation_info
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:175|Ignore unsupported extension: pre_shared_key
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.193 UTC|SSLExtensions.java:227|Ignore impact of unsupported extension: server_name
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.194 UTC|SSLExtensions.java:219|Ignore unavailable extension: max_fragment_length
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.194 UTC|SSLExtensions.java:219|Ignore unavailable extension: status_request
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.194 UTC|SSLExtensions.java:227|Ignore impact of unsupported extension: ec_point_formats
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.194 UTC|SSLExtensions.java:219|Ignore unavailable extension: application_layer_protocol_negotiation
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.194 UTC|SSLExtensions.java:219|Ignore unavailable extension: status_request_v2
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.194 UTC|SSLExtensions.java:227|Ignore impact of unsupported extension: extended_master_secret
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.194 UTC|SSLExtensions.java:219|Ignore unavailable extension: session_ticket
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.194 UTC|SSLExtensions.java:219|Ignore unavailable extension: supported_versions
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.194 UTC|SSLExtensions.java:219|Ignore unavailable extension: key_share
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.194 UTC|SSLExtensions.java:227|Ignore impact of unsupported extension: renegotiation_info
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.194 UTC|SSLExtensions.java:219|Ignore unavailable extension: pre_shared_key
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.199 UTC|CertificateMessage.java:366|Consuming server Certificate handshake message (
+"Certificates": [
+  "certificate" : {
+    "version"            : "v3",
+    "serial number"      : "62:26:62:a4",
+    "signature algorithm": "SHA256withRSA",
+    "issuer"             : "CN=RBS Global G1 Issuing Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "not before"         : "2025-10-16 11:02:44.000 UTC",
+    "not  after"         : "2028-10-15 11:32:44.000 UTC",
+    "subject"            : "CN=address-service.docdev.shared.banksvcs.net, OU=Managed, OU=Devices, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "subject public key" : "RSA",
+    "extensions"         : [
+      {
+        ObjectId: 1.2.840.113533.7.65.0 Criticality=false
+      },
+      {
+        ObjectId: 2.5.29.35 Criticality=false
+        AuthorityKeyIdentifier [
+        KeyIdentifier [
+        0000: 8B 6D 4A 71 98 FD B9 65   03 39 37 68 1B 36 88 B9  .mJq...e.97h.6..
+        0010: 9E CB 1D E4                                        ....
+        ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.19 Criticality=false
+        BasicConstraints:[
+          CA:false
+          PathLen: undefined
+        ]
+      },
+      {
+        ObjectId: 2.5.29.31 Criticality=false
+        CRLDistributionPoints [
+          [DistributionPoint:
+             [URIName: http://gen1provingcerts.web.rbsgrp.net/CRL/rbs_global_g1_issuing_proving_ca_proving_g1_pki_service_gb_crlfilecc239.crl, URIName: ldap://globalgen1pkidir.lb1.rbsgrp.net/cn=CRL239,cn=RBS%20Global%20G1%20Issuing%20Proving%20CA,ou=Proving%20G1%20PKI%20Service,o=The%20Royal%20Bank%20of%20Scotland%20Group,c=gb?certificateRevocationList, CN=CRL239, CN=RBS Global G1 Issuing Proving CA, OU=Proving G1 PKIService, O=The Royal Bank of Scotland Group, C=gb]
+        ]]
+      },
+      {
+        ObjectId: 2.5.29.32 Criticality=false
+        CertificatePolicies [
+          [CertificatePolicyId: [1.2.826.0.2.90312.100.1.2]
+        [PolicyQualifierInfo: [
+          qualifierID: 1.3.6.1.5.5.7.2.2
+          qualifier: 0000: 30 81 C2 1A 81 BF 54 68   69 73 20 63 65 72 74 69  0.....This certi
+        0010: 66 69 63 61 74 65 20 68   61 73 20 62 65 65 6E 20  ficate has been
+        0020: 69 73 73 75 65 64 20 61   73 20 61 20 4D 65 64 69  issued as a Medi
+        0030: 75 6D 20 41 73 73 75 72   61 6E 63 65 20 63 65 72  um Assurance cer
+        0040: 74 69 66 69 63 61 74 65   20 75 6E 64 65 72 20 52  tificate under R
+        0050: 42 53 20 45 6E 74 65 72   70 72 69 73 65 20 50 4B  BS Enterprise PK
+        0060: 49 20 43 65 72 74 69 66   69 63 61 74 65 20 50 6F  I Certificate Po
+        0070: 6C 69 63 79 20 77 68 69   63 68 20 69 73 20 69 64  licy which is id
+        0080: 65 6E 74 69 66 69 65 64   20 62 79 20 74 68 65 20  entified by the
+        0090: 66 6F 6C 6C 6F 77 69 6E   67 20 4F 62 6A 65 63 74  following Object
+        00A0: 20 49 64 65 6E 74 69 66   69 65 72 20 3A 20 31 2E   Identifier : 1.
+        00B0: 32 2E 38 32 36 2E 30 2E   32 2E 39 30 33 31 32 2E  2.826.0.2.90312.
+        00C0: 31 30 30 2E 31                                     100.1
+
+        ]]  ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.37 Criticality=false
+        ExtendedKeyUsages [
+          serverAuth
+          clientAuth
+        ]
+      },
+      {
+        ObjectId: 2.5.29.15 Criticality=false
+        KeyUsage [
+          DigitalSignature
+          Key_Encipherment
+        ]
+      },
+      {
+        ObjectId: 2.5.29.16 Criticality=false
+        PrivateKeyUsage: [
+        From: Thu Oct 16 11:32:44 UTC 2025, To: Sun Oct 15 11:32:44 UTC 2028]
+      },
+      {
+        ObjectId: 2.5.29.17 Criticality=false
+        SubjectAlternativeName [
+          DNSName: address-service.docdev.shared.banksvcs.net
+        ]
+      },
+      {
+        ObjectId: 2.5.29.14 Criticality=false
+        SubjectKeyIdentifier [
+        KeyIdentifier [
+        0000: 14 9E E7 03 15 7B 1E 10   58 7B EE 59 94 6D 05 FE  ........X..Y.m..
+        0010: F4 99 24 68                                        ..$h
+        ]
+        ]
+      }
+    ]},
+  "certificate" : {
+    "version"            : "v3",
+    "serial number"      : "58:9f:76:81",
+    "signature algorithm": "SHA256withRSA",
+    "issuer"             : "CN=RBS Global G1 Root Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "not before"         : "2018-01-06 11:02:41.000 UTC",
+    "not  after"         : "2033-01-06 11:32:41.000 UTC",
+    "subject"            : "CN=RBS Global G1 Issuing Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "subject public key" : "RSA",
+    "extensions"         : [
+      {
+        ObjectId: 2.5.29.35 Criticality=false
+        AuthorityKeyIdentifier [
+        KeyIdentifier [
+        0000: DB FC B7 41 F5 AC C9 A9   EF A2 48 27 C5 56 7A 78  ...A......H'.Vzx
+        0010: AD 50 75 CC                                        .Pu.
+        ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.19 Criticality=true
+        BasicConstraints:[
+          CA:true
+          PathLen: no limit
+        ]
+      },
+      {
+        ObjectId: 2.5.29.31 Criticality=false
+        CRLDistributionPoints [
+          [DistributionPoint:
+             [URIName: http://gen1provingcerts.web.rbsgrp.net/CRL/gen1proota1.crl, URIName: ldap://globalgen1pkidir.lb1.rbsgrp.net/cn=CRL1,cn=RBS%20Global%20G1%20Root%20Proving%20CA,ou=Proving%20G1%20PKI%20Service,o=The%20Royal%20Bank%20of%20Scotland%20Group,c=gb?authorityRevocationList, CN=CRL1, CN=RBS Global G1 Root Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb]
+        ]]
+      },
+      {
+        ObjectId: 2.5.29.32 Criticality=false
+        CertificatePolicies [
+          [CertificatePolicyId: [1.2.826.0.2.90312.100.1]
+        [PolicyQualifierInfo: [
+          qualifierID: 1.3.6.1.5.5.7.2.2
+          qualifier: 0000: 30 82 01 90 1A 82 01 8C   43 65 72 74 69 66 69 63  0.......Certific
+        0010: 61 74 65 20 41 75 74 68   6F 72 69 74 79 20 63 65  ate Authority ce
+        0020: 72 74 69 66 69 63 61 74   65 73 20 61 72 65 20 69  rtificates are i
+        0030: 73 73 75 65 64 20 75 6E   64 65 72 20 74 68 69 73  ssued under this
+        0040: 20 70 6F 6C 69 63 79 20   74 6F 20 43 41 73 20 74   policy to CAs t
+        0050: 68 61 74 20 6F 70 65 72   61 74 65 20 61 73 20 61  hat operate as a
+        0060: 20 73 75 62 6F 72 64 69   6E 61 74 65 20 43 41 20   subordinate CA
+        0070: 69 6E 20 72 65 6C 61 74   69 6F 6E 20 74 6F 20 74  in relation to t
+        0080: 68 65 20 47 65 6E 65 72   61 74 69 6F 6E 20 4F 6E  he Generation On
+        0090: 65 20 52 6F 6F 74 20 43   41 20 6F 66 20 54 68 65  e Root CA of The
+        00A0: 20 52 6F 79 61 6C 20 42   61 6E 6B 20 6F 66 20 53   Royal Bank of S
+        00B0: 63 6F 74 6C 61 6E 64 2E   20 54 68 65 20 47 65 6E  cotland. The Gen
+        00C0: 65 72 61 74 69 6F 6E 20   4F 6E 65 20 52 6F 6F 74  eration One Root
+        00D0: 20 43 41 20 6F 66 20 54   68 65 20 52 6F 79 61 6C   CA of The Royal
+        00E0: 20 42 61 6E 6B 20 6F 66   20 53 63 6F 74 6C 61 6E   Bank of Scotlan
+        00F0: 64 20 61 6E 64 20 74 68   69 73 20 49 73 73 75 69  d and this Issui
+        0100: 6E 67 20 43 41 20 6F 70   65 72 61 74 65 20 61 63  ng CA operate ac
+        0110: 63 6F 72 64 69 6E 67 20   74 6F 20 73 74 61 6E 64  cording to stand
+        0120: 61 72 64 73 20 61 70 70   72 6F 76 65 64 20 62 79  ards approved by
+        0130: 20 74 68 65 20 52 42 53   20 47 72 6F 75 70 20 50   the RBS Group P
+        0140: 4B 49 20 50 6F 6C 69 63   79 20 41 75 74 68 6F 72  KI Policy Author
+        0150: 69 74 79 2C 20 70 75 62   6C 69 73 68 65 64 20 69  ity, published i
+        0160: 6E 20 74 68 65 69 72 20   72 65 73 70 65 63 74 69  n their respecti
+        0170: 76 65 20 43 65 72 74 69   66 69 63 61 74 69 6F 6E  ve Certification
+        0180: 20 50 72 61 63 74 69 63   65 20 53 74 61 74 65 6D   Practice Statem
+        0190: 65 6E 74 2E                                        ent.
+
+        ]]  ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.15 Criticality=true
+        KeyUsage [
+          Key_CertSign
+          Crl_Sign
+        ]
+      },
+      {
+        ObjectId: 2.5.29.14 Criticality=false
+        SubjectKeyIdentifier [
+        KeyIdentifier [
+        0000: 8B 6D 4A 71 98 FD B9 65   03 39 37 68 1B 36 88 B9  .mJq...e.97h.6..
+        0010: 9E CB 1D E4                                        ....
+        ]
+        ]
+      }
+    ]},
+  "certificate" : {
+    "version"            : "v3",
+    "serial number"      : "58:9f:69:7f",
+    "signature algorithm": "SHA256withRSA",
+    "issuer"             : "CN=RBS Global G1 Root Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "not before"         : "2017-02-11 19:14:00.000 UTC",
+    "not  after"         : "2037-02-11 19:44:00.000 UTC",
+    "subject"            : "CN=RBS Global G1 Root Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "subject public key" : "RSA",
+    "extensions"         : [
+      {
+        ObjectId: 2.5.29.35 Criticality=false
+        AuthorityKeyIdentifier [
+        KeyIdentifier [
+        0000: DB FC B7 41 F5 AC C9 A9   EF A2 48 27 C5 56 7A 78  ...A......H'.Vzx
+        0010: AD 50 75 CC                                        .Pu.
+        ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.19 Criticality=true
+        BasicConstraints:[
+          CA:true
+          PathLen: no limit
+        ]
+      },
+      {
+        ObjectId: 2.5.29.32 Criticality=false
+        CertificatePolicies [
+          [CertificatePolicyId: [1.2.826.0.2.90312.100.1]
+        [PolicyQualifierInfo: [
+          qualifierID: 1.3.6.1.5.5.7.2.2
+          qualifier: 0000: 30 82 01 E1 1A 82 01 DD   54 68 69 73 20 73 65 6C  0.......This sel
+        0010: 66 2D 73 69 67 6E 65 64   20 47 65 6E 65 72 61 74  f-signed Generat
+        0020: 69 6F 6E 20 4F 6E 65 20   50 72 6F 76 69 6E 67 20  ion One Proving
+        0030: 52 6F 6F 74 20 43 41 20   63 65 72 74 69 66 69 63  Root CA certific
+        0040: 61 74 65 20 69 73 20 69   73 73 75 65 64 20 75 6E  ate is issued un
+        0050: 64 65 72 20 74 68 69 73   20 70 6F 6C 69 63 79 20  der this policy
+        0060: 62 79 20 74 68 65 20 47   65 6E 65 72 61 74 69 6F  by the Generatio
+        0070: 6E 20 4F 6E 65 20 50 72   6F 76 69 6E 67 20 52 6F  n One Proving Ro
+        0080: 6F 74 20 43 41 20 6F 66   20 54 68 65 20 52 6F 79  ot CA of The Roy
+        0090: 61 6C 20 42 61 6E 6B 20   6F 66 20 53 63 6F 74 6C  al Bank of Scotl
+        00A0: 61 6E 64 2E 20 54 68 65   20 47 65 6E 65 72 61 74  and. The Generat
+        00B0: 69 6F 6E 20 4F 6E 65 20   50 72 6F 76 69 6E 67 20  ion One Proving
+        00C0: 52 6F 6F 74 20 43 41 20   69 73 20 67 6F 76 65 72  Root CA is gover
+        00D0: 6E 65 64 20 61 63 63 6F   72 64 69 6E 67 20 74 6F  ned according to
+        00E0: 20 73 74 61 6E 64 61 72   64 73 20 61 70 70 72 6F   standards appro
+        00F0: 76 65 64 20 74 68 65 20   52 42 53 20 47 72 6F 75  ved the RBS Grou
+        0100: 70 20 50 4B 49 20 50 6F   6C 69 63 79 20 41 75 74  p PKI Policy Aut
+        0110: 68 6F 72 69 74 79 2C 20   70 75 62 6C 69 73 68 65  hority, publishe
+        0120: 64 20 69 6E 20 69 74 73   20 43 65 72 74 69 66 69  d in its Certifi
+        0130: 63 61 74 69 6F 6E 20 50   72 61 63 74 69 63 65 20  cation Practice
+        0140: 53 74 61 74 65 6D 65 6E   74 2E 20 54 68 69 73 20  Statement. This
+        0150: 63 65 72 74 69 66 69 63   61 74 65 20 6D 61 79 20  certificate may
+        0160: 62 65 20 75 73 65 64 20   74 6F 20 76 65 72 69 66  be used to verif
+        0170: 79 20 74 68 65 20 73 69   67 6E 61 74 75 72 65 20  y the signature
+        0180: 6F 66 20 74 68 65 20 47   65 6E 65 72 61 74 69 6F  of the Generatio
+        0190: 6E 20 4F 6E 65 20 50 72   6F 76 69 6E 67 20 52 6F  n One Proving Ro
+        01A0: 6F 74 20 43 41 20 6F 6E   20 74 68 65 20 63 65 72  ot CA on the cer
+        01B0: 74 69 66 69 63 61 74 65   73 20 61 6E 64 20 43 65  tificates and Ce
+        01C0: 72 74 69 66 69 63 61 74   65 20 52 65 76 6F 63 61  rtificate Revoca
+        01D0: 74 69 6F 6E 20 4C 69 73   74 73 20 69 74 20 69 73  tion Lists it is
+        01E0: 73 75 65 73 2E                                     sues.
+
+        ]]  ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.15 Criticality=true
+        KeyUsage [
+          Key_CertSign
+          Crl_Sign
+        ]
+      },
+      {
+        ObjectId: 2.5.29.14 Criticality=false
+        SubjectKeyIdentifier [
+        KeyIdentifier [
+        0000: DB FC B7 41 F5 AC C9 A9   EF A2 48 27 C5 56 7A 78  ...A......H'.Vzx
+        0010: AD 50 75 CC                                        .Pu.
+        ]
+        ]
+      }
+    ]}
+]
+)
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.204 UTC|ECDHServerKeyExchange.java:525|Consuming ECDH ServerKeyExchange handshake message (
+"ECDH ServerKeyExchange": {
+  "parameters": {
+    "named group": "secp256r1"
+    "ecdh public": {
+      0000: 04 71 B2 FE 57 3D 7E E6   28 EB FD F9 4D 9E B0 38  .q..W=..(...M..8
+      0010: CC A3 C1 21 2E 92 FF 44   03 6E 7E E3 24 70 61 04  ...!...D.n..$pa.
+      0020: F0 12 89 48 CF FB 7D E9   77 4F 7B BA DF 7F EC 90  ...H....wO......
+      0030: 86 CD 25 3D 8A 32 0C FB   BE 7C 84 1A AE 8E 90 FC  ..%=.2..........
+      0040: 1E                                                 .
+    },
+  },
+  "digital signature":  {
+    "signature algorithm": "rsa_pkcs1_sha256"
+    "signature": {
+      0000: BF 8C 10 3F A1 FF 4A B0   AF 7F 37 E5 99 04 2C 1F  ...?..J...7...,.
+      0010: 04 77 FE 34 C7 90 FF 5F   92 15 57 FD 01 7A D4 F0  .w.4..._..W..z..
+      0020: 43 F3 BC B3 41 E2 BD 68   30 BF 71 7A AC CE FF 32  C...A..h0.qz...2
+      0030: DE 6B C7 37 B2 3A 2B DD   BC 0F F8 4E 80 E4 37 ED  .k.7.:+....N..7.
+      0040: C0 AB EE 2B 15 13 EF 0A   20 70 45 61 AB 13 00 4B  ...+.... pEa...K
+      0050: 22 D8 33 B2 CB C4 CD 1E   FC B1 B6 5E CE C0 FF 23  ".3........^...#
+      0060: 2B 57 86 4F 88 33 63 26   D7 CA 27 94 7A E2 ED 38  +W.O.3c&..'.z..8
+      0070: 06 C9 F0 17 1D 24 FD 33   BC AA A5 8D 6F 04 A3 A5  .....$.3....o...
+      0080: 31 1C 7B 51 0F 9E 27 B3   CE 9E 03 CF AE D0 E2 F5  1..Q..'.........
+      0090: 4D 23 A3 6B 31 D9 B4 AB   00 63 79 3E 05 11 CD 08  M#.k1....cy>....
+      00A0: ED 5A 7F 85 B4 05 FE 0E   FF E5 09 21 AE 73 61 37  .Z.........!.sa7
+      00B0: 35 0F 80 01 19 52 CD 24   A7 36 99 02 1D 94 10 3A  5....R.$.6.....:
+      00C0: CA BA A0 EC 4F 65 4C 71   42 C5 6C EC 10 99 0D 16  ....OeLqB.l.....
+      00D0: 81 63 98 C5 C0 87 EC D0   2C DD 15 6D 3F 8A B9 7A  .c......,..m?..z
+      00E0: 35 FD 09 4A 85 85 5E 12   89 A2 BE DD F8 9A 82 EC  5..J..^.........
+      00F0: DB FB 98 57 0A DB D0 A6   15 83 F9 FE 5C 47 EE 8E  ...W........\G..
+    },
+  }
+}
+)
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.205 UTC|CertificateRequest.java:696|Consuming CertificateRequest handshake message (
+"CertificateRequest": {
+  "certificate types": [rsa_sign, ecdsa_sign]
+  "supported signature algorithms": [rsa_pkcs1_sha256, rsa_pkcs1_sha384, rsa_pkcs1_sha512, rsa_sha224, ecdsa_secp256r1_sha256, ecdsa_secp384r1_sha384, ecdsa_secp521r1_sha512, ecdsa_sha224, rsa_pkcs1_sha1, ecdsa_sha1]
+  "certificate authorities": []
+}
+)
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.206 UTC|CertificateRequest.java:768|Unsupported authentication scheme: rsa_pkcs1_sha384
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.206 UTC|CertificateRequest.java:768|Unsupported authentication scheme: rsa_pkcs1_sha512
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.206 UTC|CertificateRequest.java:768|Unsupported authentication scheme: rsa_sha224
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.206 UTC|CertificateRequest.java:768|Unsupported authentication scheme: ecdsa_secp384r1_sha384
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.206 UTC|CertificateRequest.java:768|Unsupported authentication scheme: ecdsa_secp521r1_sha512
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.206 UTC|CertificateRequest.java:768|Unsupported authentication scheme: ecdsa_sha224
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.206 UTC|CertificateRequest.java:768|Unsupported authentication scheme: rsa_pkcs1_sha1
+javax.net.ssl|WARNING|C2|Thread-3|2025-10-17 12:13:36.206 UTC|CertificateRequest.java:768|Unsupported authentication scheme: ecdsa_sha1
+javax.net.ssl|ALL|C2|Thread-3|2025-10-17 12:13:36.206 UTC|X509Authentication.java:207|X509KeyManager class: sun.security.ssl.SunX509KeyManagerImpl
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.207 UTC|ServerHelloDone.java:151|Consuming ServerHelloDone handshake message (
+<empty>
+)
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.212 UTC|CertificateMessage.java:330|Produced client Certificate handshake message (
+"Certificates": [
+  "certificate" : {
+    "version"            : "v3",
+    "serial number"      : "62:26:5f:5d",
+    "signature algorithm": "SHA256withRSA",
+    "issuer"             : "CN=RBS Global G1 Issuing Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "not before"         : "2025-10-15 09:55:08.000 UTC",
+    "not  after"         : "2028-10-14 10:25:08.000 UTC",
+    "subject"            : "CN=cdna-iso-address-wrapper-api-aws-dev, OU=Devices, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "subject public key" : "RSA",
+    "extensions"         : [
+      {
+        ObjectId: 1.2.840.113533.7.65.0 Criticality=false
+      },
+      {
+        ObjectId: 2.5.29.35 Criticality=false
+        AuthorityKeyIdentifier [
+        KeyIdentifier [
+        0000: 8B 6D 4A 71 98 FD B9 65   03 39 37 68 1B 36 88 B9  .mJq...e.97h.6..
+        0010: 9E CB 1D E4                                        ....
+        ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.19 Criticality=false
+        BasicConstraints:[
+          CA:false
+          PathLen: undefined
+        ]
+      },
+      {
+        ObjectId: 2.5.29.31 Criticality=false
+        CRLDistributionPoints [
+          [DistributionPoint:
+             [URIName: http://gen1provingcerts.web.rbsgrp.net/CRL/rbs_global_g1_issuing_proving_ca_proving_g1_pki_service_gb_crlfilecc238.crl, URIName: ldap://globalgen1pkidir.lb1.rbsgrp.net/cn=CRL238,cn=RBS%20Global%20G1%20Issuing%20Proving%20CA,ou=Proving%20G1%20PKI%20Service,o=The%20Royal%20Bank%20of%20Scotland%20Group,c=gb?certificateRevocationList, CN=CRL238, CN=RBS Global G1 Issuing Proving CA, OU=Proving G1 PKIService, O=The Royal Bank of Scotland Group, C=gb]
+        ]]
+      },
+      {
+        ObjectId: 2.5.29.32 Criticality=false
+        CertificatePolicies [
+          [CertificatePolicyId: [1.2.826.0.2.90312.100.1.2]
+        [PolicyQualifierInfo: [
+          qualifierID: 1.3.6.1.5.5.7.2.2
+          qualifier: 0000: 30 81 C2 1A 81 BF 54 68   69 73 20 63 65 72 74 69  0.....This certi
+        0010: 66 69 63 61 74 65 20 68   61 73 20 62 65 65 6E 20  ficate has been
+        0020: 69 73 73 75 65 64 20 61   73 20 61 20 4D 65 64 69  issued as a Medi
+        0030: 75 6D 20 41 73 73 75 72   61 6E 63 65 20 63 65 72  um Assurance cer
+        0040: 74 69 66 69 63 61 74 65   20 75 6E 64 65 72 20 52  tificate under R
+        0050: 42 53 20 45 6E 74 65 72   70 72 69 73 65 20 50 4B  BS Enterprise PK
+        0060: 49 20 43 65 72 74 69 66   69 63 61 74 65 20 50 6F  I Certificate Po
+        0070: 6C 69 63 79 20 77 68 69   63 68 20 69 73 20 69 64  licy which is id
+        0080: 65 6E 74 69 66 69 65 64   20 62 79 20 74 68 65 20  entified by the
+        0090: 66 6F 6C 6C 6F 77 69 6E   67 20 4F 62 6A 65 63 74  following Object
+        00A0: 20 49 64 65 6E 74 69 66   69 65 72 20 3A 20 31 2E   Identifier : 1.
+        00B0: 32 2E 38 32 36 2E 30 2E   32 2E 39 30 33 31 32 2E  2.826.0.2.90312.
+        00C0: 31 30 30 2E 31                                     100.1
+
+        ]]  ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.37 Criticality=false
+        ExtendedKeyUsages [
+          serverAuth
+          clientAuth
+        ]
+      },
+      {
+        ObjectId: 2.5.29.15 Criticality=false
+        KeyUsage [
+          DigitalSignature
+          Key_Encipherment
+        ]
+      },
+      {
+        ObjectId: 2.5.29.16 Criticality=false
+        PrivateKeyUsage: [
+        From: Wed Oct 15 10:25:08 UTC 2025, To: Sat Oct 14 10:25:08 UTC 2028]
+      },
+      {
+        ObjectId: 2.5.29.17 Criticality=false
+        SubjectAlternativeName [
+          DNSName: cdna-iso-address-wrapper-api-aws-dev
+        ]
+      },
+      {
+        ObjectId: 2.5.29.14 Criticality=false
+        SubjectKeyIdentifier [
+        KeyIdentifier [
+        0000: 21 74 D3 27 90 12 ED EF   85 A4 1C E6 20 9C D7 74  !t.'........ ..t
+        0010: F2 AA B1 0F                                        ....
+        ]
+        ]
+      }
+    ]},
+  "certificate" : {
+    "version"            : "v3",
+    "serial number"      : "58:9f:76:81",
+    "signature algorithm": "SHA256withRSA",
+    "issuer"             : "CN=RBS Global G1 Root Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "not before"         : "2018-01-06 11:02:41.000 UTC",
+    "not  after"         : "2033-01-06 11:32:41.000 UTC",
+    "subject"            : "CN=RBS Global G1 Issuing Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "subject public key" : "RSA",
+    "extensions"         : [
+      {
+        ObjectId: 2.5.29.35 Criticality=false
+        AuthorityKeyIdentifier [
+        KeyIdentifier [
+        0000: DB FC B7 41 F5 AC C9 A9   EF A2 48 27 C5 56 7A 78  ...A......H'.Vzx
+        0010: AD 50 75 CC                                        .Pu.
+        ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.19 Criticality=true
+        BasicConstraints:[
+          CA:true
+          PathLen: no limit
+        ]
+      },
+      {
+        ObjectId: 2.5.29.31 Criticality=false
+        CRLDistributionPoints [
+          [DistributionPoint:
+             [URIName: http://gen1provingcerts.web.rbsgrp.net/CRL/gen1proota1.crl, URIName: ldap://globalgen1pkidir.lb1.rbsgrp.net/cn=CRL1,cn=RBS%20Global%20G1%20Root%20Proving%20CA,ou=Proving%20G1%20PKI%20Service,o=The%20Royal%20Bank%20of%20Scotland%20Group,c=gb?authorityRevocationList, CN=CRL1, CN=RBS Global G1 Root Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb]
+        ]]
+      },
+      {
+        ObjectId: 2.5.29.32 Criticality=false
+        CertificatePolicies [
+          [CertificatePolicyId: [1.2.826.0.2.90312.100.1]
+        [PolicyQualifierInfo: [
+          qualifierID: 1.3.6.1.5.5.7.2.2
+          qualifier: 0000: 30 82 01 90 1A 82 01 8C   43 65 72 74 69 66 69 63  0.......Certific
+        0010: 61 74 65 20 41 75 74 68   6F 72 69 74 79 20 63 65  ate Authority ce
+        0020: 72 74 69 66 69 63 61 74   65 73 20 61 72 65 20 69  rtificates are i
+        0030: 73 73 75 65 64 20 75 6E   64 65 72 20 74 68 69 73  ssued under this
+        0040: 20 70 6F 6C 69 63 79 20   74 6F 20 43 41 73 20 74   policy to CAs t
+        0050: 68 61 74 20 6F 70 65 72   61 74 65 20 61 73 20 61  hat operate as a
+        0060: 20 73 75 62 6F 72 64 69   6E 61 74 65 20 43 41 20   subordinate CA
+        0070: 69 6E 20 72 65 6C 61 74   69 6F 6E 20 74 6F 20 74  in relation to t
+        0080: 68 65 20 47 65 6E 65 72   61 74 69 6F 6E 20 4F 6E  he Generation On
+        0090: 65 20 52 6F 6F 74 20 43   41 20 6F 66 20 54 68 65  e Root CA of The
+        00A0: 20 52 6F 79 61 6C 20 42   61 6E 6B 20 6F 66 20 53   Royal Bank of S
+        00B0: 63 6F 74 6C 61 6E 64 2E   20 54 68 65 20 47 65 6E  cotland. The Gen
+        00C0: 65 72 61 74 69 6F 6E 20   4F 6E 65 20 52 6F 6F 74  eration One Root
+        00D0: 20 43 41 20 6F 66 20 54   68 65 20 52 6F 79 61 6C   CA of The Royal
+        00E0: 20 42 61 6E 6B 20 6F 66   20 53 63 6F 74 6C 61 6E   Bank of Scotlan
+        00F0: 64 20 61 6E 64 20 74 68   69 73 20 49 73 73 75 69  d and this Issui
+        0100: 6E 67 20 43 41 20 6F 70   65 72 61 74 65 20 61 63  ng CA operate ac
+        0110: 63 6F 72 64 69 6E 67 20   74 6F 20 73 74 61 6E 64  cording to stand
+        0120: 61 72 64 73 20 61 70 70   72 6F 76 65 64 20 62 79  ards approved by
+        0130: 20 74 68 65 20 52 42 53   20 47 72 6F 75 70 20 50   the RBS Group P
+        0140: 4B 49 20 50 6F 6C 69 63   79 20 41 75 74 68 6F 72  KI Policy Author
+        0150: 69 74 79 2C 20 70 75 62   6C 69 73 68 65 64 20 69  ity, published i
+        0160: 6E 20 74 68 65 69 72 20   72 65 73 70 65 63 74 69  n their respecti
+        0170: 76 65 20 43 65 72 74 69   66 69 63 61 74 69 6F 6E  ve Certification
+        0180: 20 50 72 61 63 74 69 63   65 20 53 74 61 74 65 6D   Practice Statem
+        0190: 65 6E 74 2E                                        ent.
+
+        ]]  ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.15 Criticality=true
+        KeyUsage [
+          Key_CertSign
+          Crl_Sign
+        ]
+      },
+      {
+        ObjectId: 2.5.29.14 Criticality=false
+        SubjectKeyIdentifier [
+        KeyIdentifier [
+        0000: 8B 6D 4A 71 98 FD B9 65   03 39 37 68 1B 36 88 B9  .mJq...e.97h.6..
+        0010: 9E CB 1D E4                                        ....
+        ]
+        ]
+      }
+    ]},
+  "certificate" : {
+    "version"            : "v3",
+    "serial number"      : "58:9f:69:7f",
+    "signature algorithm": "SHA256withRSA",
+    "issuer"             : "CN=RBS Global G1 Root Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "not before"         : "2017-02-11 19:14:00.000 UTC",
+    "not  after"         : "2037-02-11 19:44:00.000 UTC",
+    "subject"            : "CN=RBS Global G1 Root Proving CA, OU=Proving G1 PKI Service, O=The Royal Bank of Scotland Group, C=gb",
+    "subject public key" : "RSA",
+    "extensions"         : [
+      {
+        ObjectId: 2.5.29.35 Criticality=false
+        AuthorityKeyIdentifier [
+        KeyIdentifier [
+        0000: DB FC B7 41 F5 AC C9 A9   EF A2 48 27 C5 56 7A 78  ...A......H'.Vzx
+        0010: AD 50 75 CC                                        .Pu.
+        ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.19 Criticality=true
+        BasicConstraints:[
+          CA:true
+          PathLen: no limit
+        ]
+      },
+      {
+        ObjectId: 2.5.29.32 Criticality=false
+        CertificatePolicies [
+          [CertificatePolicyId: [1.2.826.0.2.90312.100.1]
+        [PolicyQualifierInfo: [
+          qualifierID: 1.3.6.1.5.5.7.2.2
+          qualifier: 0000: 30 82 01 E1 1A 82 01 DD   54 68 69 73 20 73 65 6C  0.......This sel
+        0010: 66 2D 73 69 67 6E 65 64   20 47 65 6E 65 72 61 74  f-signed Generat
+        0020: 69 6F 6E 20 4F 6E 65 20   50 72 6F 76 69 6E 67 20  ion One Proving
+        0030: 52 6F 6F 74 20 43 41 20   63 65 72 74 69 66 69 63  Root CA certific
+        0040: 61 74 65 20 69 73 20 69   73 73 75 65 64 20 75 6E  ate is issued un
+        0050: 64 65 72 20 74 68 69 73   20 70 6F 6C 69 63 79 20  der this policy
+        0060: 62 79 20 74 68 65 20 47   65 6E 65 72 61 74 69 6F  by the Generatio
+        0070: 6E 20 4F 6E 65 20 50 72   6F 76 69 6E 67 20 52 6F  n One Proving Ro
+        0080: 6F 74 20 43 41 20 6F 66   20 54 68 65 20 52 6F 79  ot CA of The Roy
+        0090: 61 6C 20 42 61 6E 6B 20   6F 66 20 53 63 6F 74 6C  al Bank of Scotl
+        00A0: 61 6E 64 2E 20 54 68 65   20 47 65 6E 65 72 61 74  and. The Generat
+        00B0: 69 6F 6E 20 4F 6E 65 20   50 72 6F 76 69 6E 67 20  ion One Proving
+        00C0: 52 6F 6F 74 20 43 41 20   69 73 20 67 6F 76 65 72  Root CA is gover
+        00D0: 6E 65 64 20 61 63 63 6F   72 64 69 6E 67 20 74 6F  ned according to
+        00E0: 20 73 74 61 6E 64 61 72   64 73 20 61 70 70 72 6F   standards appro
+        00F0: 76 65 64 20 74 68 65 20   52 42 53 20 47 72 6F 75  ved the RBS Grou
+        0100: 70 20 50 4B 49 20 50 6F   6C 69 63 79 20 41 75 74  p PKI Policy Aut
+        0110: 68 6F 72 69 74 79 2C 20   70 75 62 6C 69 73 68 65  hority, publishe
+        0120: 64 20 69 6E 20 69 74 73   20 43 65 72 74 69 66 69  d in its Certifi
+        0130: 63 61 74 69 6F 6E 20 50   72 61 63 74 69 63 65 20  cation Practice
+        0140: 53 74 61 74 65 6D 65 6E   74 2E 20 54 68 69 73 20  Statement. This
+        0150: 63 65 72 74 69 66 69 63   61 74 65 20 6D 61 79 20  certificate may
+        0160: 62 65 20 75 73 65 64 20   74 6F 20 76 65 72 69 66  be used to verif
+        0170: 79 20 74 68 65 20 73 69   67 6E 61 74 75 72 65 20  y the signature
+        0180: 6F 66 20 74 68 65 20 47   65 6E 65 72 61 74 69 6F  of the Generatio
+        0190: 6E 20 4F 6E 65 20 50 72   6F 76 69 6E 67 20 52 6F  n One Proving Ro
+        01A0: 6F 74 20 43 41 20 6F 6E   20 74 68 65 20 63 65 72  ot CA on the cer
+        01B0: 74 69 66 69 63 61 74 65   73 20 61 6E 64 20 43 65  tificates and Ce
+        01C0: 72 74 69 66 69 63 61 74   65 20 52 65 76 6F 63 61  rtificate Revoca
+        01D0: 74 69 6F 6E 20 4C 69 73   74 73 20 69 74 20 69 73  tion Lists it is
+        01E0: 73 75 65 73 2E                                     sues.
+
+        ]]  ]
+        ]
+      },
+      {
+        ObjectId: 2.5.29.15 Criticality=true
+        KeyUsage [
+          Key_CertSign
+          Crl_Sign
+        ]
+      },
+      {
+        ObjectId: 2.5.29.14 Criticality=false
+        SubjectKeyIdentifier [
+        KeyIdentifier [
+        0000: DB FC B7 41 F5 AC C9 A9   EF A2 48 27 C5 56 7A 78  ...A......H'.Vzx
+        0010: AD 50 75 CC                                        .Pu.
+        ]
+        ]
+      }
+    ]}
+]
+)
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.216 UTC|ECDHClientKeyExchange.java:407|Produced ECDHE ClientKeyExchange handshake message (
+"ECDH ClientKeyExchange": {
+  "ecdh public": {
+    0000: 04 F6 50 DA 13 BC 2F 6B   B1 E0 E8 7C 02 94 A5 07  ..P.../k........
+    0010: A8 A6 85 53 A7 C6 8A 52   1E 5C 9D 12 98 1C 73 18  ...S...R.\....s.
+    0020: 39 68 D8 E0 91 26 9F 71   58 0D F1 D6 E1 D1 85 36  9h...&.qX......6
+    0030: 36 D8 42 83 D8 3E 72 0F   27 D3 93 D8 A3 A1 EE D1  6.B..>r.'.......
+    0040: EA                                                 .
+  },
+}
+)
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.284 UTC|CertificateVerify.java:767|Produced CertificateVerify handshake message (
+"CertificateVerify": {
+  "signature algorithm": rsa_pkcs1_sha256
+  "signature": {
+    0000: 39 C3 C0 B4 5B 58 C9 6F   D9 A6 39 55 DD 26 B9 F4  9...[X.o..9U.&..
+    0010: 03 6F 6E 54 C4 C8 98 EE   1A F5 85 56 6B A3 66 8A  .onT.......Vk.f.
+    0020: F6 78 39 40 6F 64 18 29   1A FD FE 11 4B 3B B7 EC  .x9@od.)....K;..
+    0030: CD 9A F4 A8 C8 1A 14 E5   7C A3 51 46 71 5C 2B 34  ..........QFq\+4
+    0040: E3 DD 13 0A F3 03 4D AE   B9 A5 7D 34 F7 F3 6E 13  ......M....4..n.
+    0050: EE FD E7 8F E2 D8 43 EF   3A 8F 4C B5 8F CD 60 2D  ......C.:.L...`-
+    0060: FF E3 1E F8 21 B6 6E 8E   4A AB FB C8 29 5F 72 F0  ....!.n.J...)_r.
+    0070: 46 9F BB CA A6 EC 83 AB   E1 D6 04 7C 76 89 42 2B  F...........v.B+
+    0080: F7 F7 0F 59 D4 AB 70 7B   B1 BB BF E1 1F CF 2C E5  ...Y..p.......,.
+    0090: 58 95 EB 60 FC 7F 35 7C   29 ED CC 15 30 66 66 D6  X..`..5.)...0ff.
+    00A0: 78 6D B4 EF FA 91 BC 5B   E3 78 AF 70 1C 2A D0 3A  xm.....[.x.p.*.:
+    00B0: A8 62 74 7B 6C 6B C0 D1   C0 DF E4 79 1B 5E FA 71  .bt.lk.....y.^.q
+    00C0: 05 3B 31 1E C1 8D 5F 5D   BA 35 F1 D1 98 44 E6 77  .;1..._].5...D.w
+    00D0: C1 02 6D 77 D2 29 42 72   D5 48 A6 6D C2 8D 72 64  ..mw.)Br.H.m..rd
+    00E0: 45 82 41 B6 21 7E 43 2B   B9 84 17 12 B3 C4 52 30  E.A.!.C+......R0
+    00F0: AB 94 D1 87 1E 78 CC F2   B0 94 81 95 D9 B0 8A AD  .....x..........
+  }
+}
+)
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.285 UTC|ChangeCipherSpec.java:115|Produced ChangeCipherSpec message
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.286 UTC|Finished.java:396|Produced client Finished handshake message (
+"Finished": {
+  "verify data": {
+    0000: 32 63 ED 2B 1D 0F 43 9B   E5 A6 B4 6B
+  }'}
+)
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.288 UTC|ChangeCipherSpec.java:149|Consuming ChangeCipherSpec message
+javax.net.ssl|DEBUG|C2|Thread-3|2025-10-17 12:13:36.288 UTC|Finished.java:548|Consuming server Finished handshake message (
+"Finished": {
+  "verify data": {
+    0000: 5A DC DF 0C 31 B0 88 BC   02 73 B0 B3
+  }'}
+)
