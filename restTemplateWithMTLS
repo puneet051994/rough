@@ -1,61 +1,51 @@
-@Bean("restTemplateWithMTLS")
-@Lazy
-@Scope(SCOPE_PROTOTYPE)
-public RestTemplate restTemplateWithMTLS(
-        RestConfig restConfig,
-        ResponseServerErrorHandler responseServerErrorHandler) throws Exception {
+@Bean("restTemplateWithMutualTls")
+	public RestTemplate mutualTlsRestTemplate() throws Exception {
+		// Load keystore
+		KeyStore keyStore = KeyStore.getInstance("JKS");
+		try (FileInputStream keyStoreStream = new FileInputStream(keystorePath)) {
+			keyStore.load(keyStoreStream, keystorePassword.toCharArray());
+		}
 
-    RequestConfig requestConfig = RequestConfig.custom()
-            .setConnectionKeepAlive(Timeout.of(Duration.ofMillis(httpConfig.getConnectionTimeout())))
-            .setConnectionRequestTimeout(Timeout.of(Duration.ofMillis(httpConfig.getConnectionTimeout())))
-            .setResponseTimeout(Timeout.of(Duration.ofMillis(httpConfig.getSocketTimeout())))
-            .build();
+		// Load truststore
+		KeyStore trustStore = KeyStore.getInstance("JKS");
+		try (FileInputStream trustStoreStream = new FileInputStream(truststorePath)) {
+			trustStore.load(trustStoreStream, truststorePassword.toCharArray());
+		}
 
-    // Load client keystore
-    KeyStore keyStore = KeyStore.getInstance("PKCS12");
-    try (FileInputStream keystoreStream = new FileInputStream(restConfig.getKeystorePath())) {
-        keyStore.load(keystoreStream, restConfig.getKeystorePassword().toCharArray());
-    }
+		// Create SSL context with mutual authentication
+		SSLContext sslContext = SSLContextBuilder.create()
+										.loadKeyMaterial(keyStore, keystorePassword.toCharArray())
+										.loadTrustMaterial(trustStore, null)
+										.build();
 
-    // Load truststore
-    KeyStore trustStore = KeyStore.getInstance("PKCS12");
-    try (FileInputStream truststoreStream = new FileInputStream(restConfig.getTruststorePath())) {
-        trustStore.load(truststoreStream, restConfig.getTruststorePassword().toCharArray());
-    }
+		// Configure request timeouts using existing httpConfig
+		RequestConfig requestConfig = RequestConfig.custom()
+											  .setConnectionKeepAlive(Timeout.of(Duration.ofMillis(httpConfig.getConnectionTimeout())))
+											  .setConnectionRequestTimeout(Timeout.of(Duration.ofMillis(httpConfig.getConnectionTimeout())))
+											  .setResponseTimeout(Timeout.of(Duration.ofMillis(httpConfig.getSocketTimeout())))
+											  .build();
 
-    // Build SSLContext
-    SSLContext sslContext = SSLContexts.custom()
-            .loadKeyMaterial(keyStore, restConfig.getKeyPassword().toCharArray())
-            .loadTrustMaterial(trustStore, null)
-            .build();
+		// Create SSL connection socket factory
+		SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(
+				sslContext,
+				NoopHostnameVerifier.INSTANCE
+		);
 
-    // Create connection manager with SSL
-    org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory sslSocketFactory =
-            new org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory(
-                    sslContext,
-                    NoopHostnameVerifier.INSTANCE // optional: disable hostname verification
-            );
+		// Create connection manager with SSL socket factory
+		PoolingHttpClientConnectionManager connectionManager =
+				PoolingHttpClientConnectionManagerBuilder.create()
+						.setSSLSocketFactory(sslSocketFactory)
+						.build();
 
-    org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager connManager =
-            org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder.create()
-                    .setSSLSocketFactory(sslSocketFactory)
-                    .build();
+		// Configure HTTP client with connection manager and request config
+		CloseableHttpClient httpClient = HttpClients.custom()
+												 .setConnectionManager(connectionManager)
+												 .setDefaultRequestConfig(requestConfig)
+												 .build();
 
-    // Build the HTTP client
-    CloseableHttpClient httpClient = HttpClients.custom()
-            .setConnectionManager(connManager)
-            .setDefaultRequestConfig(requestConfig)
-            .build();
+		// Create HTTP request factory with correlation ID support
+		CorrelationIdClientHttpRequestFactory requestFactory =
+				new CorrelationIdClientHttpRequestFactory(httpClient, true);
 
-    // Inject into RestTemplate
-    CorrelationIdClientHttpRequestFactory correlationIdClientHttpRequestFactory =
-            new CorrelationIdClientHttpRequestFactory(httpClient, true);
-
-    RestTemplate restTemplate = new RestTemplate(correlationIdClientHttpRequestFactory);
-
-    if (restConfig.isResponseServerErrorHandler()) {
-        restTemplate.setErrorHandler(responseServerErrorHandler);
-    }
-
-    return restTemplate;
-}
+		return new RestTemplate(requestFactory);
+	}
